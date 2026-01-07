@@ -199,6 +199,70 @@
     .modalText{font-size:14px; color:var(--muted); margin-bottom:14px; line-height:1.6;}
     .modalActions{display:flex; gap:10px; flex-wrap:wrap;}
     .modalActions .btn{flex:1; min-width:160px;}
+
+    
+    /* 画面全体の高さを安定させる（モバイル対策） */
+    html, body { height: 100%; }
+    body { min-height: 100dvh; }
+    
+    /* Quiz画面は縦flexで、下の操作領域を常に画面下へ */
+    #screenQuiz{
+      display:flex;
+      flex-direction:column;
+      min-height: 100%;
+    }
+    
+    /* 上の問題領域は伸びる */
+    #screenQuiz .quizBody{
+      flex: 1;
+      display:flex;
+      flex-direction:column;
+    }
+    
+    /* 下の操作領域は常に下に張り付く + セーフエリア + 右端内側に寄せる */
+    #screenQuiz .quizActions{
+      margin-top:auto;
+      padding:
+        12px
+        calc(14px + env(safe-area-inset-right) + 10px)
+        calc(12px + env(safe-area-inset-bottom))
+        calc(14px + env(safe-area-inset-left) + 10px);
+    }
+    
+    /* おわるボタンだけさらに内側に寄せたい場合 */
+    #btnStop{
+      margin-left: 6px;
+    }
+    
+    /* isReveal の時だけ できた/ちがった を表示 */
+    #screenQuiz:not(.isReveal) #controlsReveal{
+      display:none !important;
+    }
+    #screenQuiz.isReveal #controlsReveal{
+      display:flex !important;
+    }
+    
+    /* done中は再開不可にする（下のボタンを止める） */
+    #screenQuiz.isDone #btnRevealNow,
+    #screenQuiz.isDone #controlsReveal{
+      display:none !important;
+    }
+    
+    /* もどるは done のときだけ見せる運用にする */
+    #screenQuiz:not(.isDone) #btnBackToSettings{
+      display:none !important;
+    }
+    #screenQuiz.isDone #btnBackToSettings{
+      display:block !important;
+    }
+    
+    /* 結果表示は見やすく */
+    #result{
+      margin-top: 10px;
+      margin-bottom: 0;
+    }
+
+    
   </style>
 </head>
 <body>
@@ -267,32 +331,28 @@
       </section>
 
       <section id="screenQuiz" class="screen hidden" hidden>
-        <div class="progressRow">
-          <div id="progressText" class="progressText"></div>
-          <div id="progressText2" class="progressText"></div>
-        </div>
-        <div class="progressBar"><div id="progressFill" class="progressFill"></div></div>
-
-        <div class="quizCard">
-          <div id="countdown" class="countdown"></div>
-          <div id="problem" class="problem">-</div>
-          <div id="answer" class="answer hidden">-</div>
-        </div>
-
-        <div class="bottomArea">
-          <div id="bottomControls" class="bottomControls">
-            <div id="controlsReveal" class="controls hidden">
-              <button id="btnCorrect" class="btn primary big" type="button">できた</button>
-              <button id="btnWrong" class="btn big" type="button">ちがった</button>
-            </div>
-
-            <div class="controls">
-              <button id="btnRevealNow" class="btn ghost" type="button">いま すぐ こたえ</button>
-            </div>
+        <div class="quizBody">
+          <div class="quizCard">
+            <div id="countdown" class="countdown"></div>
+            <div id="problem" class="problem">-</div>
+            <div id="answer" class="answer hidden">-</div>
           </div>
-
+      
           <div id="result" class="result hidden"></div>
-          <button id="btnBackToSettings" class="btn ghost hidden" type="button">せっていに もどる</button>
+        </div>
+      
+        <div class="quizActions">
+          <div id="controlsReveal" class="controls hidden">
+            <button id="btnCorrect" class="btn primary big" type="button">できた</button>
+            <button id="btnWrong" class="btn big" type="button">ちがった</button>
+          </div>
+      
+          <div class="controls">
+            <button id="btnRevealNow" class="btn ghost" type="button">いますぐ こたえ</button>
+            <button id="btnStop" class="btn ghost" type="button">おわる</button>
+          </div>
+      
+          <button id="btnBackToSettings" class="btn ghost hidden" type="button">もどる</button>
         </div>
       </section>
 
@@ -460,7 +520,7 @@
         prevKey: null,
         timer: null,
         remaining: 0,
-        phase: "settings",
+        phase: "settings",  // settings | question | reveal | done
         sessionTotal: 0,
         sessionCorrect: 0,
         sessionSaved: false,
@@ -729,15 +789,28 @@
         }
       }
 
-      function syncUI() {
-        if (state.phase === "reveal") {
-          elAnswer.classList.remove("hidden");
-          elControlsReveal.classList.remove("hidden");
-        } else {
-          elAnswer.classList.add("hidden");
-          elControlsReveal.classList.add("hidden");
-        }
+    function syncUI() {
+      const isReveal = (state.phase === "reveal");
+      const isDone = (state.phase === "done");
+    
+      // CSS制御用クラス
+      elQuiz.classList.toggle("isReveal", isReveal);
+      elQuiz.classList.toggle("isDone", isDone);
+    
+      // 答え
+      if (isReveal) elAnswer.classList.remove("hidden");
+      else elAnswer.classList.add("hidden");
+    
+      // 結果と戻る
+      if (isDone) {
+        elResult.classList.remove("hidden");
+        btnBackToSettings.classList.remove("hidden");
+      } else {
+        elResult.classList.add("hidden");
+        btnBackToSettings.classList.add("hidden");
       }
+    }
+
 
       function updateProgressUI() {
         const done = state.sessionTotal;
@@ -801,6 +874,7 @@
         syncUI();
       }
 
+
       function formatDuration(ms) {
         const sec = Math.max(0, Math.floor(ms / 1000));
         const m = Math.floor(sec / 60);
@@ -812,57 +886,37 @@
       function stop() {
         clearTimer();
         state.current = null;
-        state.phase = "stopped";
-        syncUI();
-
-        if (elBottomControls) elBottomControls.classList.add("hidden");
-
-        const durationMs = state.sessionStartAt ? (Date.now() - state.sessionStartAt) : 0;
-
-        if (state.sessionTotal > 0 && !state.sessionSaved) {
-          const rec = {
-            at: Date.now(),
-            total: state.sessionTotal,
-            correct: state.sessionCorrect,
-            duration_ms: durationMs,
-            settings: { ...state.settings }
-          };
-          state.sessions.unshift(rec);
-          state.sessions = state.sessions.slice(0, 200);
-          saveSessions();
-          state.sessionSaved = true;
-        }
-
+      
+        state.phase = "done";
+      
         if (state.sessionTotal > 0) {
-          const durText = durationMs ? formatDuration(durationMs) : "-";
-          elResult.innerHTML =
-            `<div class="resultLine"><span class="numHuge">${state.sessionTotal}</span>もん おわり！</div>` +
-            `<div class="resultLine"><span class="numHuge">${state.sessionCorrect}</span>もん できたよ！</div>` +
-            `<div class="resultMeta">じかん: ${durText}</div>`;
-          elResult.classList.remove("hidden");
-          btnBackToSettings.classList.remove("hidden");
+          elResult.textContent = TEXT.result(state.sessionCorrect, state.sessionTotal);
+        } else {
+          elResult.textContent = "";
         }
+      
+        syncUI();
       }
+
 
       function submitResult(isCorrect) {
         if (!state.current) return;
-
+      
         state.sessionTotal += 1;
         if (isCorrect) state.sessionCorrect += 1;
-
+      
         updateWeight(state.current.key, isCorrect);
         saveHistory();
-
-        // のこり もんすう を 0 まで かならず こうしん
-        updateProgressUI();
-
-        if (state.sessionTotal >= LIMIT) {
+      
+        // 50問終わったら結果表示して固定
+        if (state.sessionTotal >= 50) {
           stop();
           return;
         }
+      
+  startQuestion();
+}
 
-        startQuestion();
-      }
 
       function resetHistory() {
         state.history = {};
@@ -1042,20 +1096,21 @@
 
         btnStart.addEventListener("click", () => {
           saveSettings();
-
+        
           state.sessionTotal = 0;
           state.sessionCorrect = 0;
-          state.sessionSaved = false;
-          state.sessionStartAt = Date.now();
-
-          elResult.innerHTML = "";
+        
+          // 結果状態を解除
+          state.phase = "question";
+          elResult.textContent = "";
           elResult.classList.add("hidden");
           btnBackToSettings.classList.add("hidden");
-          if (elBottomControls) elBottomControls.classList.remove("hidden");
-
+          syncUI();
+        
           showQuiz();
           startQuestion();
         });
+
 
         btnRevealNow.addEventListener("click", revealAnswer);
         btnCorrect.addEventListener("click", () => submitResult(true));
@@ -1085,11 +1140,10 @@
         btnBackFromHistory.addEventListener("click", showSettings);
 
         btnBackToSettings.addEventListener("click", () => {
-          elResult.classList.add("hidden");
-          btnBackToSettings.classList.add("hidden");
-          if (elBottomControls) elBottomControls.classList.remove("hidden");
+          state.phase = "settings";
           showSettings();
         });
+
 
         // かくにん ダイアログ
         btnConfirmCancel.addEventListener("click", closeConfirm);
