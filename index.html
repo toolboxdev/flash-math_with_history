@@ -114,6 +114,9 @@
       border-radius:14px;
     }
 
+    /* りれき の けすボタン など */
+    .btn.tiny{padding:8px 10px; font-size:14px; border-radius:12px;}
+
     .quizCard{
       background:rgba(17,24,39,0.85);
       border:1px solid rgba(255,255,255,0.06);
@@ -388,6 +391,7 @@
                     <th class="right">せいかいりつ</th>
                     <th class="right">じかん</th>
                     <th>せってい</th>
+                    <th class="right">そうさ</th>
                   </tr>
                 </thead>
                 <tbody id="sessionTable"></tbody>
@@ -411,11 +415,11 @@
   <!-- りせっと かくにん -->
   <div id="confirm" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
     <div class="modalBox">
-      <div id="confirmTitle" class="modalTitle">りせっと する？</div>
+      <div id="confirmTitle" class="modalTitle">かくにん</div>
       <div id="confirmText" class="modalText"></div>
       <div class="modalActions">
         <button id="btnConfirmCancel" class="btn" type="button">やめる</button>
-        <button id="btnConfirmOk" class="btn subtle" type="button">りせっと する</button>
+        <button id="btnConfirmOk" class="btn subtle" type="button">けす</button>
       </div>
     </div>
   </div>
@@ -502,7 +506,8 @@
         sessionSaved: false,
         sessionStartAt: 0,
         historyTab: "problems",
-        pendingReset: null // "history" | "sessions"
+        pendingAction: null, // { kind: "history" | "sessions" | "deleteSession", sessionId?: string }
+        sessionDelta: {} // key -> { shown, correct }
       };
 
       function loadSettings() {
@@ -537,6 +542,18 @@
         } catch {
           state.sessions = [];
         }
+
+        // 旧データ互換: id がないセットに id を付与
+        let changed = false;
+        state.sessions = state.sessions.map((rec, i) => {
+          if (!rec || typeof rec !== "object") return rec;
+          if (!rec.id) {
+            rec.id = `${rec.at || Date.now()}_${i}`;
+            changed = true;
+          }
+          return rec;
+        });
+        if (changed) saveSessions();
       }
 
       function saveSessions() {
@@ -651,6 +668,16 @@
           h.weight = Math.min(3.0, +(h.weight * 1.25).toFixed(6));
         }
         h.last_at = Date.now();
+      }
+
+      function addSessionDelta(key, isCorrect) {
+        const k = String(key || "");
+        if (!k) return;
+        if (!state.sessionDelta || typeof state.sessionDelta !== "object") state.sessionDelta = {};
+        const cur = state.sessionDelta[k] || { shown: 0, correct: 0 };
+        cur.shown += 1;
+        if (isCorrect) cur.correct += 1;
+        state.sessionDelta[k] = cur;
       }
 
       function getRangeSpec() {
@@ -865,12 +892,15 @@
         const durationMs = state.sessionStartAt ? (Date.now() - state.sessionStartAt) : 0;
 
         if (state.sessionTotal > 0 && !state.sessionSaved) {
+          const sessionId = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
           const rec = {
+            id: sessionId,
             at: Date.now(),
             total: state.sessionTotal,
             correct: state.sessionCorrect,
             duration_ms: durationMs,
-            settings: { ...state.settings }
+            settings: { ...state.settings },
+            delta: { ...state.sessionDelta }
           };
           state.sessions.unshift(rec);
           state.sessions = state.sessions.slice(0, 200);
@@ -898,6 +928,7 @@
         if (isCorrect) state.sessionCorrect += 1;
 
         updateWeight(state.current.key, isCorrect);
+        addSessionDelta(state.current.key, isCorrect);
         saveHistory();
 
         updateProgressUI();
@@ -943,6 +974,83 @@
         const parts = String(key).split(":");
         if (parts.length !== 3) return { op: "", left: "", right: "" };
         return { op: parts[0], left: parts[1], right: parts[2] };
+      }
+
+      function clampInt(n) {
+        const x = Number(n);
+        if (!Number.isFinite(x)) return 0;
+        return Math.max(0, Math.floor(x));
+      }
+
+      function recomputeLastAtForKey(key) {
+        loadSessions();
+        let last = 0;
+        for (const s of state.sessions) {
+          if (!s || typeof s !== "object") continue;
+          const d = s.delta;
+          if (!d || typeof d !== "object") continue;
+          if (d[key] && (Number(d[key].shown) || 0) > 0) {
+            const at = Number(s.at) || 0;
+            if (at > last) last = at;
+          }
+        }
+        return last;
+      }
+
+      function deleteOneSession(sessionId) {
+        loadSessions();
+        loadHistory();
+
+        const sid = String(sessionId || "");
+        const idx = state.sessions.findIndex(s => s && String(s.id) === sid);
+        if (idx < 0) {
+          setStatus("そのセットが みつからなかったよ");
+          return;
+        }
+
+        const sess = state.sessions[idx];
+        const delta = (sess && typeof sess === "object") ? sess.delta : null;
+
+        // まずセットを削除
+        state.sessions.splice(idx, 1);
+        saveSessions();
+
+        // delta がある場合のみ、もんだい べつ を差し引く
+        if (delta && typeof delta === "object") {
+          const keys = Object.keys(delta);
+          for (const k of keys) {
+            const d = delta[k];
+            const subShown = clampInt(d && d.shown);
+            const subCorrect = clampInt(d && d.correct);
+            if (subShown <= 0 && subCorrect <= 0) continue;
+
+            const h = state.history[k];
+            if (!h || typeof h === "object" && !h) continue;
+            if (!h || typeof h !== "object") continue;
+
+            const newShown = clampInt((h.shown || 0) - subShown);
+            const newCorrect = clampInt((h.correct || 0) - subCorrect);
+
+            if (newShown <= 0) {
+              delete state.history[k];
+              continue;
+            }
+
+            h.shown = newShown;
+            h.correct = Math.min(newCorrect, newShown);
+
+            // さいご は残りセットから再計算（delta がない古いセットは反映できない）
+            h.last_at = recomputeLastAtForKey(k);
+          }
+
+          saveHistory();
+          setStatus("そのセットを けしたよ。もんだい べつ も へらしたよ");
+        } else {
+          setStatus("そのセットを けしたよ（このセットは もんだい ないようが ほぞん されていないよ）");
+        }
+
+        renderHistory();
+        renderSessions();
       }
 
       function renderHistory() {
@@ -1006,11 +1114,11 @@
         if (!elSessionTable) return;
 
         if (!state.sessions.length) {
-          elSessionTable.innerHTML = `<tr><td colspan="6" class="muted">50もん きろくが ありません</td></tr>`;
+          elSessionTable.innerHTML = `<tr><td colspan="7" class="muted">50もん きろくが ありません</td></tr>`;
           return;
         }
 
-        const rows = state.sessions.map(s => {
+        const rows = state.sessions.map((s, idx) => {
           const at = formatJst(s.at);
           const total = Number(s.total) || 0;
           const correct = Number(s.correct) || 0;
@@ -1024,6 +1132,8 @@
           const sum10 = st.sum10 ? "10まで" : "";
           const settingText = [op, range, sec, sum10].filter(Boolean).join(" / ");
 
+          const sid = s.id ? String(s.id) : `${s.at || Date.now()}_${idx}`;
+
           return (
             `<tr>` +
               `<td><span class="pill">${at || "-"}</span></td>` +
@@ -1032,26 +1142,41 @@
               `<td class="right">${rate}%</td>` +
               `<td class="right">${dur}</td>` +
               `<td>${settingText}</td>` +
+              `<td class="right"><button class="btn subtle tiny btnSessionDelete" data-session-id="${sid}" type="button">けす</button></td>` +
             `</tr>`
           );
         }).join("");
 
         elSessionTable.innerHTML = rows;
+
+        document.querySelectorAll(".btnSessionDelete").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const sid = btn.getAttribute("data-session-id");
+            openConfirm("deleteSession", sid);
+          });
+        });
       }
 
-      function openConfirm(kind) {
-        state.pendingReset = kind;
-        if (kind === "history") {
+      function openConfirm(kind, sessionId) {
+        const k = String(kind || "");
+        state.pendingAction = { kind: k, sessionId: sessionId ? String(sessionId) : "" };
+
+        if (k === "history") {
           elConfirmText.textContent = "もんだい りれきを ぜんぶ けします。いい？";
-        } else {
+        } else if (k === "sessions") {
           elConfirmText.textContent = "50もん きろくを ぜんぶ けします。いい？";
+        } else if (k === "deleteSession") {
+          elConfirmText.textContent = "このセットを けします。もんだい べつ の でた/できた も へらすよ。いい？";
+        } else {
+          elConfirmText.textContent = "かくにん";
         }
+
         elConfirm.classList.remove("hidden");
       }
 
       function closeConfirm() {
         elConfirm.classList.add("hidden");
-        state.pendingReset = null;
+        state.pendingAction = null;
       }
 
       function wireUI() {
@@ -1093,6 +1218,7 @@
           state.sessionCorrect = 0;
           state.sessionSaved = false;
           state.sessionStartAt = Date.now();
+          state.sessionDelta = {};
 
           elResult.innerHTML = "";
           elResult.classList.add("hidden");
@@ -1120,7 +1246,6 @@
             return;
           }
 
-          // quiz中は「おわる」
           stop();
         });
 
@@ -1139,7 +1264,6 @@
         btnBackFromHistory.addEventListener("click", showSettings);
 
         btnBackToSettings.addEventListener("click", () => {
-          // もどる を押すまで再開不可（stoppedのまま）。
           elResult.classList.add("hidden");
           btnBackToSettings.classList.add("hidden");
           if (elBottomControls) elBottomControls.classList.remove("hidden");
@@ -1149,10 +1273,13 @@
         // かくにん ダイアログ
         btnConfirmCancel.addEventListener("click", closeConfirm);
         btnConfirmOk.addEventListener("click", () => {
-          const kind = state.pendingReset;
+          const act = state.pendingAction;
           closeConfirm();
-          if (kind === "history") resetHistory();
-          else if (kind === "sessions") resetSessions();
+          if (!act || typeof act !== "object") return;
+
+          if (act.kind === "history") resetHistory();
+          else if (act.kind === "sessions") resetSessions();
+          else if (act.kind === "deleteSession") deleteOneSession(act.sessionId);
         });
 
         // うしろの くろい ところを おしても とじる
