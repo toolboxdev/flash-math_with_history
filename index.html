@@ -1032,7 +1032,7 @@
         judgeTimer = setTimeout(() => {
           elJudge.classList.add('hidden');
           judgeTimer = null;
-        }, 600);
+        }, 3000);
       }
 
       
@@ -1222,6 +1222,7 @@
         }).join('')
       }
 
+
       function openSessionModal(sessionId){
         loadSessions()
         const s = state.sessions.find(x => String(x.id) === String(sessionId))
@@ -1236,6 +1237,17 @@
         elSessionModalMeta.textContent = `いつ: ${at || '-'} / できた: ${correct}/${total} / せいかいりつ: ${rate}% / じかん: ${dur}`
       
         const items = Array.isArray(s.items) ? s.items : []
+      
+        // 追加: 問題ごとの正解率を出すために履歴を読む
+        loadHistory()
+        const rateForKey = (key) => {
+          const h = state.history && state.history[key]
+          const shown = h ? (Number(h.shown) || 0) : 0
+          const cor = h ? (Number(h.correct) || 0) : 0
+          if (shown <= 0) return '-'
+          return `${Math.round((cor / shown) * 100)}%`
+        }
+      
         if (!items.length) {
           elSessionModalBody.innerHTML = `<div style='padding:12px;' class='muted'>もんだい データが ありません</div>`
         } else {
@@ -1246,11 +1258,14 @@
             const expr = `${left} ${opSymbol(op)} ${right}`
             const markClass = ok ? 'markOk' : 'markNg'
             const markText = ok ? '〇' : '✖'
+            const acc = key ? rateForKey(key) : '-'
+      
             return (
               `<tr>` +
                 `<td class='right'>${idx + 1}</td>` +
                 `<td>${expr}</td>` +
                 `<td class='right'><span class='${markClass}'>${markText}</span></td>` +
+                `<td class='right'>${acc}</td>` +
               `</tr>`
             )
           }).join('')
@@ -1262,6 +1277,7 @@
                   `<th class='right'>ばんごう</th>` +
                   `<th>もんだい</th>` +
                   `<th class='right'>けっか</th>` +
+                  `<th class='right'>せいかいりつ</th>` +
                 `</tr>` +
               `</thead>` +
               `<tbody>` + rows + `</tbody>` +
@@ -1270,6 +1286,7 @@
       
         elSessionModal.classList.remove('hidden')
       }
+
       
       function closeSessionModal(){
         elSessionModal.classList.add('hidden')
