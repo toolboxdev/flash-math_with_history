@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ja">
+<html lang='ja'>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#111827" />
+  <meta charset='utf-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1, viewport-fit=cover' />
+  <meta name='theme-color' content='#111827' />
   <title>フラッシュ たしざん ひきざん</title>
   <style>
     :root{
@@ -18,46 +18,22 @@
       --radius:18px;
     }
     *{box-sizing:border-box}
-
     html,body{height:100%}
     html{background: linear-gradient(180deg, var(--bg), #050814);}
     body{
       margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans JP", sans-serif;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Noto Sans JP', sans-serif;
       background: linear-gradient(180deg, var(--bg), #050814);
       background-attachment: fixed;
       color:var(--text);
     }
-
-    .app{min-height:100dvh; display:flex; flex-direction:column;}
-
-    /* 右端の誤タップを減らすため、左右の余白を少し増やす（Safe Areaも考慮） */
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:
-        14px
-        calc(60px + env(safe-area-inset-right))
-        10px
-        calc(18px + env(safe-area-inset-left));
-    }
-
+    .app{min-height:100%; display:flex; flex-direction:column;}
+    .topbar{display:flex; align-items:center; justify-content:space-between; padding:14px 14px 10px;}
     .title{font-size:18px; font-weight:700}
+    .main{flex:1; padding:12px 14px 18px}
 
-    .main{
-      flex:1;
-      padding:12px 14px 18px;
-      display:flex;
-      flex-direction:column;
-      min-height:0; /* flex内スクロールの安定 */
-    }
-
-    .screen{max-width:720px; margin:0 auto; width:100%;}
+    .screen{max-width:720px; margin:0 auto}
     .hidden{display:none !important}
-
-    /* 設定/履歴は画面が小さくても操作できるようにスクロール可能に */
-    .screenScroll{flex:1; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; padding-bottom:calc(12px + env(safe-area-inset-bottom));}
 
     .h1{margin:8px 0 14px; font-size:22px}
 
@@ -101,10 +77,8 @@
     }
     .btn.big{width:100%; padding:16px 14px; font-size:20px}
     .btn.primary{background:rgba(37,99,235,0.9); border-color:rgba(255,255,255,0.12)}
-    .btn.danger{background:rgba(220,38,38,0.9); border-color:rgba(255,255,255,0.12)}
     .btn.ghost{background:transparent}
 
-    /* りせっとを ひかえめに */
     .btn.subtle{
       background:rgba(255,255,255,0.03);
       border:1px solid rgba(255,255,255,0.10);
@@ -114,47 +88,20 @@
       border-radius:14px;
     }
 
-    /* りれき の けすボタン など */
-    .btn.tiny{padding:8px 10px; font-size:14px; border-radius:12px;}
-
-    .quizCard{
-      background:rgba(17,24,39,0.85);
-      border:1px solid rgba(255,255,255,0.06);
-      border-radius:var(--radius);
-      padding:22px 16px;
-      margin:12px 0 16px;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.45);
-      text-align:center;
-    }
-
-    .countdown{height:26px; font-size:18px; color:var(--muted); margin-bottom:10px;}
-    .problem{font-size:64px; font-weight:800; letter-spacing:1px; margin:10px 0;}
-
-    /* 答え表示エリアは常に場所を確保する */
-    #answer{
-      min-height:3em;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:54px;
-      font-weight:800;
-      margin-top:12px;
-    }
-    .answer.hidden{visibility:hidden; display:flex !important;}
-
-    .controls{display:flex; gap:10px; flex-wrap:wrap;}
-    .controls .btn{flex:1; min-width:160px;}
+    .switch{position:relative; width:54px; height:32px; display:inline-block;}
+    .switch input{display:none}
+    .slider{position:absolute; inset:0; border-radius:16px; background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.10);}
+    .slider:before{content:''; position:absolute; width:26px; height:26px; left:3px; top:2px; border-radius:50%; background:#fff; transition: transform 0.18s ease;}
+    .switch input:checked + .slider:before{transform: translateX(22px);}
 
     .footer{padding:10px 14px 16px; color:var(--muted); font-size:12px;}
     .status{max-width:720px; margin:0 auto}
 
-    .switch{position:relative; width:54px; height:32px; display:inline-block;}
-    .switch input{display:none}
-    .slider{position:absolute; inset:0; border-radius:16px; background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.10);}
-    .slider:before{content:""; position:absolute; width:26px; height:26px; left:3px; top:2px; border-radius:50%; background:#fff; transition: transform 0.18s ease;}
-    .switch input:checked + .slider:before{transform: translateX(22px);}
+    /* quiz layout */
+    #screenQuiz{display:flex; flex-direction:column; min-height:100%;}
+    #screenQuiz[hidden]{display:none !important;}
+    #screenQuiz.hidden{display:none !important;}
 
-    /* 進捗表示 */
     .progressRow{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px;}
     .progressText{font-size:14px; color:var(--muted);}
     .numBig{font-size:30px; font-weight:900; color:var(--text);}
@@ -163,32 +110,136 @@
     .progressBar{height:10px; background:rgba(255,255,255,0.10); border-radius:999px; overflow:hidden; margin-top:8px;}
     .progressFill{height:100%; width:0%; background:rgba(37,99,235,0.9);}
 
-    /* quiz: 下部のボタンが隠れないように「上はスクロール」「下は固定(粘着)」 */
-    #screenQuiz{flex:1; min-height:0;}
-    #screenQuiz.hidden,
-    #screenQuiz[hidden]{display:none !important;}
-    #screenQuiz:not(.hidden):not([hidden]){display:flex; flex-direction:column;}
-
-    .quizScroll{flex:1; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch; padding-bottom:10px;}
-
-    .bottomArea{
-      position:sticky;
-      bottom:0;
-      padding-bottom:calc(10px + env(safe-area-inset-bottom));
-      background: linear-gradient(180deg, rgba(11,16,32,0) 0%, rgba(11,16,32,0.75) 35%, rgba(5,8,20,0.92) 100%);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+    .quizCard{
+      background:rgba(17,24,39,0.85);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:var(--radius);
+      padding:18px 16px;
+      margin:12px 0 12px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+      text-align:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .problem{font-size:64px; font-weight:800; letter-spacing:1px; margin:8px 0 6px;}
+    .answerBox{
+      margin-top:10px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(255,255,255,0.04);
+      padding:14px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:70px;
+    }
+    .answerText{
+      font-size:44px;
+      font-weight:900;
+      letter-spacing:2px;
+    }
+    .answerPlaceholder{
+      font-size:20px;
+      color:rgba(229,231,235,0.55);
+      font-weight:700;
     }
 
-    .bottomControls{margin-bottom:10px;}
+    /* feedback overlay */
+    .judgeOverlay{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,0.42);
+      backdrop-filter: blur(2px);
+    }
+    .judgeOverlay.hidden{display:none;}
+    .judgeMark{
+      font-size:120px;
+      font-weight:900;
+      color: rgba(220,38,38,0.95);
+      text-shadow: 0 10px 30px rgba(0,0,0,0.55);
+      line-height:1;
+      transform: translateY(-6px);
+    }
+    .judgeSub{
+      position:absolute;
+      bottom:12px;
+      left:12px;
+      right:12px;
+      text-align:center;
+      color:rgba(229,231,235,0.85);
+      font-size:14px;
+    }
+    .judgeSub .pill{
+      display:inline-block;
+      padding:3px 10px;
+      border-radius:999px;
+      background:rgba(17,24,39,0.85);
+      border:1px solid rgba(255,255,255,0.10);
+    }
+
+    /* bottom fixed keypad */
+    .bottomDock{
+      margin-top:auto;
+      position:sticky;
+      bottom:0;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, rgba(11,16,32,0), rgba(11,16,32,0.75) 30%, rgba(11,16,32,0.95));
+      backdrop-filter: blur(6px);
+    }
+    .dockInner{
+      max-width:720px;
+      margin:0 auto;
+      padding-top:10px;
+    }
+
+    .dockTopRow{
+      display:flex;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .dockTopRow .btn{
+      flex:1;
+      min-width:0;
+    }
+
+    .keypad{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    .key{
+      background:rgba(17,24,39,0.88);
+      border:1px solid rgba(255,255,255,0.10);
+      color:var(--text);
+      border-radius:16px;
+      padding:14px 10px;
+      font-size:24px;
+      font-weight:800;
+      cursor:pointer;
+      min-height:56px;
+    }
+    .key:active{transform: translateY(1px);}
+    .key.wide{grid-column: span 2;}
+    .key.ok{
+      background:rgba(37,99,235,0.9);
+      border-color:rgba(255,255,255,0.14);
+    }
+    .key.util{
+      background:rgba(255,255,255,0.03);
+      font-weight:800;
+      font-size:18px;
+    }
 
     .result{margin:10px 0; font-size:20px; font-weight:800; text-align:center;}
     .resultMeta{margin-top:10px; font-size:14px; color:var(--muted);}
 
-    /* 履歴ページ */
+    /* history */
     #screenHistory{min-height:100%; display:flex; flex-direction:column;}
-    #screenHistory.hidden,
     #screenHistory[hidden]{display:none !important;}
+    #screenHistory.hidden{display:none !important;}
 
     .tableWrap{
       overflow:auto;
@@ -206,12 +257,11 @@
     .muted{color:var(--muted);}
     .historyActions{display:flex; gap:10px; flex-wrap:wrap;}
 
-    /* 履歴タブ */
     .historyTabs{flex-wrap:nowrap;}
     .historyTabs .segBtn{flex:1; min-width:0; text-align:center; padding:10px 10px;}
     .tabBtn{min-width:0;}
 
-    /* かくにんダイアログ */
+    /* confirm modal */
     .modal{
       position:fixed;
       inset:0;
@@ -239,1074 +289,963 @@
   </style>
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
-      <div class="title">フラッシュけいさん</div>
-      <button id="btnToSettings" class="btn ghost" type="button">せってい</button>
+  <div class='app'>
+    <header class='topbar'>
+      <div class='title'>フラッシュけいさん</div>
+      <button id='btnToSettings' class='btn ghost' type='button'>せってい</button>
     </header>
 
-    <main class="main">
-      <section id="screenSettings" class="screen screenScroll">
-        <h1 class="h1">せってい</h1>
+    <main class='main'>
+      <section id='screenSettings' class='screen'>
+        <h1 class='h1'>せってい</h1>
 
-        <div class="card">
-          <div class="label">しゅつだいの しかた</div>
-          <div class="seg">
-            <button class="segBtn" data-opmode="add" type="button">たしざん</button>
-            <button class="segBtn" data-opmode="sub" type="button">ひきざん</button>
-            <button class="segBtn" data-opmode="mix" type="button">まぜて</button>
+        <div class='card'>
+          <div class='label'>しゅつだいの しかた</div>
+          <div class='seg'>
+            <button class='segBtn' data-opmode='add' type='button'>たしざん</button>
+            <button class='segBtn' data-opmode='sub' type='button'>ひきざん</button>
+            <button class='segBtn' data-opmode='mix' type='button'>まぜて</button>
           </div>
         </div>
 
-        <div class="card">
-          <div class="label">かずの はんい</div>
-          <div class="seg">
-            <button class="segBtn" data-range="c2a" type="button">ひとけた（1〜9）</button>
-            <button class="segBtn" data-range="c2b" type="button">1〜19</button>
-            <button class="segBtn" data-range="c3" type="button">どちらか にけた（10〜99）</button>
+        <div class='card'>
+          <div class='label'>かずの はんい</div>
+          <div class='seg'>
+            <button class='segBtn' data-range='c2a' type='button'>ひとけた（1〜9）</button>
+            <button class='segBtn' data-range='c2b' type='button'>1〜19</button>
+            <button class='segBtn' data-range='c3' type='button'>どちらか にけた（10〜99）</button>
           </div>
-          <div class="hint">かずの はんいは ひとつだけ えらべます</div>
+          <div class='hint'>かずの はんいは ひとつだけ えらべます</div>
         </div>
 
-        <div class="card" id="sum10Card">
-          <div class="row">
+        <div class='card' id='sum10Card'>
+          <div class='row'>
             <div>
-              <div class="label">ごうけい 10まで</div>
-              <div class="hint">たしざん か まぜて のとき</div>
+              <div class='label'>ごうけい 10まで</div>
+              <div class='hint'>たしざん か まぜて のとき</div>
             </div>
-            <label class="switch">
-              <input id="sum10" type="checkbox" />
-              <span class="slider"></span>
+            <label class='switch'>
+              <input id='sum10' type='checkbox' />
+              <span class='slider'></span>
             </label>
           </div>
         </div>
 
-        <div class="card">
-          <div class="label">こたえを みるまで</div>
-          <div class="seg">
-            <button class="segBtn" data-seconds="1" type="button">1 びょう</button>
-            <button class="segBtn" data-seconds="2" type="button">2 びょう</button>
-            <button class="segBtn" data-seconds="3" type="button">3 びょう</button>
-            <button class="segBtn" data-seconds="5" type="button">5 びょう</button>
+        <div class='card'>
+          <div class='label'>がくしゅう りれき</div>
+          <div class='historyActions'>
+            <button id='btnViewHistory' class='btn' type='button'>りれき みる</button>
+            <button id='btnResetHistory' class='btn subtle' type='button'>もんだい りれき りせっと</button>
           </div>
+          <div class='hint'>この たんまつの りれきを かくにん できます</div>
         </div>
 
-        <div class="card">
-          <div class="label">がくしゅう りれき</div>
-          <div class="historyActions">
-            <button id="btnViewHistory" class="btn" type="button">りれき みる</button>
-            <button id="btnResetHistory" class="btn subtle" type="button">もんだい りれき りせっと</button>
-          </div>
-          <div class="hint">この たんまつの りれきを かくにん できます</div>
-        </div>
-
-        <button id="btnStart" class="btn primary big" type="button">はじめる</button>
+        <button id='btnStart' class='btn primary big' type='button'>はじめる</button>
       </section>
 
-      <section id="screenQuiz" class="screen hidden" hidden>
-        <div class="quizScroll">
-          <div class="progressRow">
-            <div id="progressText" class="progressText"></div>
-            <div id="progressText2" class="progressText"></div>
-          </div>
-          <div class="progressBar"><div id="progressFill" class="progressFill"></div></div>
+      <section id='screenQuiz' class='screen hidden' hidden>
+        <div class='progressRow'>
+          <div id='progressText' class='progressText'></div>
+          <div id='progressText2' class='progressText'></div>
+        </div>
+        <div class='progressBar'><div id='progressFill' class='progressFill'></div></div>
 
-          <div class="quizCard">
-            <div id="countdown" class="countdown"></div>
-            <div id="problem" class="problem">-</div>
-            <div id="answer" class="answer hidden">-</div>
+        <div class='quizCard'>
+          <div id='problem' class='problem'>-</div>
+
+          <div class='answerBox'>
+            <div id='answerInput' class='answerText hidden'></div>
+            <div id='answerPlaceholder' class='answerPlaceholder'>こたえを いれてね</div>
+          </div>
+
+          <div id='judgeOverlay' class='judgeOverlay hidden'>
+            <div id='judgeMark' class='judgeMark'>⭕</div>
+            <div class='judgeSub'>
+              <span id='judgeSubPill' class='pill'></span>
+            </div>
           </div>
         </div>
 
-        <div class="bottomArea">
-          <div id="bottomControls" class="bottomControls">
-            <div id="controlsReveal" class="controls hidden" hidden>
-              <button id="btnCorrect" class="btn primary big" type="button">できた</button>
-              <button id="btnWrong" class="btn big" type="button">ちがった</button>
+        <div id='result' class='result hidden'></div>
+        <button id='btnBackToSettings' class='btn ghost hidden' type='button'>せっていに もどる</button>
+
+        <div class='bottomDock'>
+          <div class='dockInner'>
+            <div class='dockTopRow'>
+              <button id='btnNext' class='btn primary' type='button' disabled>つぎ</button>
+              <button id='btnClear' class='btn' type='button'>けす</button>
             </div>
 
-            <div class="controls">
-              <button id="btnRevealNow" class="btn ghost" type="button">いま すぐ こたえ</button>
+            <div class='keypad' id='keypad'>
+              <button class='key' data-key='1' type='button'>1</button>
+              <button class='key' data-key='2' type='button'>2</button>
+              <button class='key' data-key='3' type='button'>3</button>
+              <button class='key' data-key='4' type='button'>4</button>
+              <button class='key' data-key='5' type='button'>5</button>
+              <button class='key' data-key='6' type='button'>6</button>
+              <button class='key' data-key='7' type='button'>7</button>
+              <button class='key' data-key='8' type='button'>8</button>
+              <button class='key' data-key='9' type='button'>9</button>
+              <button class='key util' data-key='back' type='button'>けす</button>
+              <button class='key' data-key='0' type='button'>0</button>
+              <button class='key ok' data-key='ok' type='button'>OK</button>
             </div>
           </div>
-
-          <div id="result" class="result hidden"></div>
-          <button id="btnBackToSettings" class="btn ghost hidden" type="button">せっていに もどる</button>
         </div>
       </section>
 
-      <section id="screenHistory" class="screen screenScroll hidden" hidden>
-        <h1 class="h1">りれき</h1>
+      <section id='screenHistory' class='screen hidden' hidden>
+        <h1 class='h1'>りれき</h1>
 
-        <div class="card">
-          <div id="historySummary" class="small muted"></div>
-          <div class="historyActions" style="margin-top:10px;">
-            <button id="btnResetHistory2" class="btn subtle" type="button">もんだい りれき りせっと</button>
-            <button id="btnResetSessions" class="btn subtle" type="button">50もん きろく りせっと</button>
+        <div class='card'>
+          <div id='historySummary' class='small muted'></div>
+          <div class='historyActions' style='margin-top:10px;'>
+            <button id='btnResetHistory2' class='btn subtle' type='button'>もんだい りれき りせっと</button>
+            <button id='btnResetSessions' class='btn subtle' type='button'>50もん きろく りせっと</button>
           </div>
-          <div class="hint">りれきは この たんまつの localStorage に ほぞん されています</div>
+          <div class='hint'>りれきは この たんまつの localStorage に ほぞん されています</div>
         </div>
 
-        <div class="card">
-          <div class="label">ひょうじ きりかえ</div>
-          <div class="seg historyTabs">
-            <button class="segBtn tabBtn active" data-historytab="problems" type="button">もんだい べつ</button>
-            <button class="segBtn tabBtn" data-historytab="sessions" type="button">50もん きろく</button>
+        <div class='card'>
+          <div class='label'>ひょうじ きりかえ</div>
+          <div class='seg historyTabs'>
+            <button class='segBtn tabBtn active' data-historytab='problems' type='button'>もんだい べつ</button>
+            <button class='segBtn tabBtn' data-historytab='sessions' type='button'>50もん きろく</button>
           </div>
-          <div class="hint">タブで ひょうじを きりかえ できます</div>
+          <div class='hint'>タブで ひょうじを きりかえ できます</div>
         </div>
 
-        <div id="historyPanelProblems">
-          <div class="card">
-            <div class="label">もんだい べつ（せいかいりつ ひくい じゅん）</div>
-            <div class="tableWrap">
+        <div id='historyPanelProblems'>
+          <div class='card'>
+            <div class='label'>もんだい べつ（せいかいりつ ひくい じゅん）</div>
+            <div class='tableWrap'>
               <table>
                 <thead>
                   <tr>
                     <th>もんだい</th>
-                    <th class="right">でた</th>
-                    <th class="right">できた</th>
-                    <th class="right">せいかいりつ</th>
+                    <th class='right'>でた</th>
+                    <th class='right'>できた</th>
+                    <th class='right'>せいかいりつ</th>
                     <th>さいご</th>
-                    <th class="right">おもみ</th>
+                    <th class='right'>おもみ</th>
                   </tr>
                 </thead>
-                <tbody id="historyTable"></tbody>
+                <tbody id='historyTable'></tbody>
               </table>
             </div>
-            <div class="hint">せいかいりつ が ひくい もんだいから ならびます</div>
           </div>
         </div>
 
-        <div id="historyPanelSessions" class="hidden">
-          <div class="card">
-            <div class="label">50もん きろく（さいきん じゅん）</div>
-            <div class="tableWrap">
+        <div id='historyPanelSessions' class='hidden'>
+          <div class='card'>
+            <div class='label'>50もん きろく（さいきん じゅん）</div>
+            <div class='tableWrap'>
               <table>
                 <thead>
                   <tr>
                     <th>いつ</th>
-                    <th class="right">もん</th>
-                    <th class="right">できた</th>
-                    <th class="right">せいかいりつ</th>
-                    <th class="right">じかん</th>
+                    <th class='right'>もん</th>
+                    <th class='right'>できた</th>
+                    <th class='right'>せいかいりつ</th>
+                    <th class='right'>じかん</th>
                     <th>せってい</th>
-                    <th class="right">そうさ</th>
+                    <th class='right'>さくじょ</th>
                   </tr>
                 </thead>
-                <tbody id="sessionTable"></tbody>
+                <tbody id='sessionTable'></tbody>
               </table>
             </div>
-            <div class="hint">50もん おわり か ちゅうだん した ときに きろく されます</div>
           </div>
         </div>
 
-        <div class="historyActions">
-          <button id="btnBackFromHistory" class="btn ghost big" type="button">せっていに もどる</button>
+        <div class='historyActions'>
+          <button id='btnBackFromHistory' class='btn ghost big' type='button'>せっていに もどる</button>
         </div>
       </section>
     </main>
 
-    <footer class="footer">
-      <div id="status" class="status"></div>
+    <footer class='footer'>
+      <div id='status' class='status'></div>
     </footer>
   </div>
 
-  <!-- りせっと かくにん -->
-  <div id="confirm" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-    <div class="modalBox">
-      <div id="confirmTitle" class="modalTitle">かくにん</div>
-      <div id="confirmText" class="modalText"></div>
-      <div class="modalActions">
-        <button id="btnConfirmCancel" class="btn" type="button">やめる</button>
-        <button id="btnConfirmOk" class="btn subtle" type="button">けす</button>
+  <div id='confirm' class='modal hidden' role='dialog' aria-modal='true' aria-labelledby='confirmTitle'>
+    <div class='modalBox'>
+      <div id='confirmTitle' class='modalTitle'>りせっと する？</div>
+      <div id='confirmText' class='modalText'></div>
+      <div class='modalActions'>
+        <button id='btnConfirmCancel' class='btn' type='button'>やめる</button>
+        <button id='btnConfirmOk' class='btn subtle' type='button'>りせっと する</button>
       </div>
     </div>
   </div>
 
   <script>
-    (() => {
-      const LS_SETTINGS = "flash_math_settings_v1";
-      const LS_HISTORY  = "flash_math_history_v1";
-      const LS_SESSIONS = "flash_math_sessions_v1";
+    ;(() => {
+      const LS_SETTINGS = 'flash_math_settings_v1'
+      const LS_HISTORY  = 'flash_math_history_v1'
+      const LS_SESSIONS = 'flash_math_sessions_v1'
 
-      const $ = (id) => document.getElementById(id);
+      const $ = (id) => document.getElementById(id)
 
-      const elSettings = $("screenSettings");
-      const elQuiz = $("screenQuiz");
-      const elHistory = $("screenHistory");
+      const elSettings = $('screenSettings')
+      const elQuiz = $('screenQuiz')
+      const elHistory = $('screenHistory')
 
-      const elProblem = $("problem");
-      const elAnswer = $("answer");
-      const elCountdown = $("countdown");
-      const elControlsReveal = $("controlsReveal");
-      const elStatus = $("status");
+      const elProblem = $('problem')
+      const elStatus = $('status')
 
-      const btnToSettings = $("btnToSettings");
-      const btnStart = $("btnStart");
-      const btnRevealNow = $("btnRevealNow");
-      const btnCorrect = $("btnCorrect");
-      const btnWrong = $("btnWrong");
-      const btnResetHistory = $("btnResetHistory");
-      const btnResetHistory2 = $("btnResetHistory2");
-      const btnViewHistory = $("btnViewHistory");
-      const btnBackFromHistory = $("btnBackFromHistory");
-      const btnResetSessions = $("btnResetSessions");
+      const elProgressText = $('progressText')
+      const elProgressText2 = $('progressText2')
+      const elProgressFill = $('progressFill')
 
-      const sum10Card = $("sum10Card");
-      const chkSum10 = $("sum10");
-      const elResult = $("result");
-      const btnBackToSettings = $("btnBackToSettings");
-      const elBottomControls = $("bottomControls");
+      const elAnswerInput = $('answerInput')
+      const elAnswerPlaceholder = $('answerPlaceholder')
 
-      const elProgressText = $("progressText");
-      const elProgressText2 = $("progressText2");
-      const elProgressFill = $("progressFill");
+      const elJudgeOverlay = $('judgeOverlay')
+      const elJudgeMark = $('judgeMark')
+      const elJudgeSubPill = $('judgeSubPill')
 
-      const elHistoryTable = $("historyTable");
-      const elSessionTable = $("sessionTable");
-      const elHistorySummary = $("historySummary");
+      const btnToSettings = $('btnToSettings')
+      const btnStart = $('btnStart')
+      const btnNext = $('btnNext')
+      const btnClear = $('btnClear')
+      const keypad = $('keypad')
 
-      const elHistoryPanelProblems = $("historyPanelProblems");
-      const elHistoryPanelSessions = $("historyPanelSessions");
+      const btnViewHistory = $('btnViewHistory')
+      const btnBackFromHistory = $('btnBackFromHistory')
 
-      // かくにんダイアログ
-      const elConfirm = $("confirm");
-      const elConfirmText = $("confirmText");
-      const btnConfirmCancel = $("btnConfirmCancel");
-      const btnConfirmOk = $("btnConfirmOk");
+      const btnResetHistory = $('btnResetHistory')
+      const btnResetHistory2 = $('btnResetHistory2')
+      const btnResetSessions = $('btnResetSessions')
 
-      const LIMIT = 50;
+      const sum10Card = $('sum10Card')
+      const chkSum10 = $('sum10')
 
-      const TEXT = {
-        start: "はじめる",
-        stop: "おわる",
-        revealNow: "いま すぐ こたえ",
-        correct: "できた",
-        wrong: "ちがった",
-        countdown: (n) => `あと ${n} びょう`
-      };
+      const elResult = $('result')
+      const btnBackToSettings = $('btnBackToSettings')
+
+      const elHistoryTable = $('historyTable')
+      const elSessionTable = $('sessionTable')
+      const elHistorySummary = $('historySummary')
+      const elHistoryPanelProblems = $('historyPanelProblems')
+      const elHistoryPanelSessions = $('historyPanelSessions')
+
+      const elConfirm = $('confirm')
+      const elConfirmText = $('confirmText')
+      const btnConfirmCancel = $('btnConfirmCancel')
+      const btnConfirmOk = $('btnConfirmOk')
+
+      const LIMIT = 50
 
       const state = {
         settings: {
-          opmode: "add",
-          range: "c2a",
-          sum10: false,
-          seconds: 3
+          opmode: 'add',
+          range: 'c2a',
+          sum10: false
         },
         history: {},
         sessions: [],
         current: null,
         prevKey: null,
-        timer: null,
-        remaining: 0,
-        phase: "settings", // settings | question | reveal | stopped | history
+        phase: 'settings',
         sessionTotal: 0,
         sessionCorrect: 0,
         sessionSaved: false,
         sessionStartAt: 0,
-        historyTab: "problems",
-        pendingAction: null, // { kind: "history" | "sessions" | "deleteSession", sessionId?: string }
-        sessionDelta: {} // key -> { shown, correct }
-      };
+        historyTab: 'problems',
+        pendingReset: null,
+        input: '',
+        locked: false,
+        lastJudge: null,
+        sessionItems: [] // { key, correct }
+      }
 
       function loadSettings() {
         try {
-          const s = JSON.parse(localStorage.getItem(LS_SETTINGS) || "null");
-          if (s && typeof s === "object") state.settings = { ...state.settings, ...s };
+          const s = JSON.parse(localStorage.getItem(LS_SETTINGS) || 'null')
+          if (s && typeof s === 'object') state.settings = { ...state.settings, ...s }
         } catch {}
       }
-
       function saveSettings() {
-        localStorage.setItem(LS_SETTINGS, JSON.stringify(state.settings));
+        localStorage.setItem(LS_SETTINGS, JSON.stringify(state.settings))
       }
-
       function loadHistory() {
         try {
-          const h = JSON.parse(localStorage.getItem(LS_HISTORY) || "{}");
-          if (h && typeof h === "object") state.history = h;
-        } catch {
-          state.history = {};
-        }
+          const h = JSON.parse(localStorage.getItem(LS_HISTORY) || '{}')
+          if (h && typeof h === 'object') state.history = h
+        } catch { state.history = {} }
       }
-
       function saveHistory() {
-        localStorage.setItem(LS_HISTORY, JSON.stringify(state.history));
+        localStorage.setItem(LS_HISTORY, JSON.stringify(state.history))
       }
-
       function loadSessions() {
         try {
-          const s = JSON.parse(localStorage.getItem(LS_SESSIONS) || "[]");
-          if (Array.isArray(s)) state.sessions = s;
-          else state.sessions = [];
-        } catch {
-          state.sessions = [];
-        }
-
-        // 旧データ互換: id がないセットに id を付与
-        let changed = false;
-        state.sessions = state.sessions.map((rec, i) => {
-          if (!rec || typeof rec !== "object") return rec;
-          if (!rec.id) {
-            rec.id = `${rec.at || Date.now()}_${i}`;
-            changed = true;
-          }
-          return rec;
-        });
-        if (changed) saveSessions();
+          const s = JSON.parse(localStorage.getItem(LS_SESSIONS) || '[]')
+          state.sessions = Array.isArray(s) ? s : []
+        } catch { state.sessions = [] }
       }
-
       function saveSessions() {
-        localStorage.setItem(LS_SESSIONS, JSON.stringify(state.sessions));
+        localStorage.setItem(LS_SESSIONS, JSON.stringify(state.sessions))
       }
 
       function setStatus(msg) {
-        elStatus.textContent = msg || "";
+        elStatus.textContent = msg || ''
       }
-
       function setActiveSeg(selector, value, attr) {
         document.querySelectorAll(selector).forEach(btn => {
-          btn.classList.toggle("active", btn.getAttribute(attr) === String(value));
-        });
+          btn.classList.toggle('active', btn.getAttribute(attr) === String(value))
+        })
       }
 
       function showSettings() {
-        state.phase = "settings";
-
-        elHistory.classList.add("hidden");
-        elHistory.setAttribute("hidden", "");
-
-        elQuiz.classList.add("hidden");
-        elQuiz.setAttribute("hidden", "");
-
-        elSettings.classList.remove("hidden");
-
-        btnToSettings.textContent = "せってい";
-        setStatus("");
+        state.phase = 'settings'
+        elHistory.classList.add('hidden')
+        elHistory.setAttribute('hidden','')
+        elQuiz.classList.add('hidden')
+        elQuiz.setAttribute('hidden','')
+        elSettings.classList.remove('hidden')
+        btnToSettings.textContent = 'せってい'
+        setStatus('')
       }
 
       function showQuiz() {
-        state.phase = "question";
-
-        elHistory.classList.add("hidden");
-        elHistory.setAttribute("hidden", "");
-
-        elSettings.classList.add("hidden");
-
-        elQuiz.classList.remove("hidden");
-        elQuiz.removeAttribute("hidden");
-
-        btnToSettings.textContent = TEXT.stop;
-        setStatus("");
+        state.phase = 'question'
+        elHistory.classList.add('hidden')
+        elHistory.setAttribute('hidden','')
+        elSettings.classList.add('hidden')
+        elQuiz.classList.remove('hidden')
+        elQuiz.removeAttribute('hidden')
+        btnToSettings.textContent = 'せってい'
+        setStatus('')
       }
 
       function showHistory() {
-        state.phase = "history";
-
-        elSettings.classList.add("hidden");
-
-        elQuiz.classList.add("hidden");
-        elQuiz.setAttribute("hidden", "");
-
-        elHistory.classList.remove("hidden");
-        elHistory.removeAttribute("hidden");
-
-        btnToSettings.textContent = "せってい";
-        setStatus("");
-
-        renderHistory();
-        renderSessions();
-        setHistoryTab(state.historyTab || "problems");
+        state.phase = 'history'
+        elSettings.classList.add('hidden')
+        elQuiz.classList.add('hidden')
+        elQuiz.setAttribute('hidden','')
+        elHistory.classList.remove('hidden')
+        elHistory.removeAttribute('hidden')
+        btnToSettings.textContent = 'せってい'
+        setStatus('')
+        renderHistory()
+        renderSessions()
+        setHistoryTab(state.historyTab || 'problems')
       }
 
       function setHistoryTab(tab) {
-        const t = (tab === "sessions") ? "sessions" : "problems";
-        state.historyTab = t;
-
-        document.querySelectorAll(".tabBtn[data-historytab]").forEach(btn => {
-          btn.classList.toggle("active", btn.getAttribute("data-historytab") === t);
-        });
-
-        if (elHistoryPanelProblems) elHistoryPanelProblems.classList.toggle("hidden", t !== "problems");
-        if (elHistoryPanelSessions) elHistoryPanelSessions.classList.toggle("hidden", t !== "sessions");
+        const t = (tab === 'sessions') ? 'sessions' : 'problems'
+        state.historyTab = t
+        document.querySelectorAll('.tabBtn[data-historytab]').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-historytab') === t)
+        })
+        if (elHistoryPanelProblems) elHistoryPanelProblems.classList.toggle('hidden', t !== 'problems')
+        if (elHistoryPanelSessions) elHistoryPanelSessions.classList.toggle('hidden', t !== 'sessions')
       }
 
       function normalizeUIBySettings() {
-        setActiveSeg(".segBtn[data-opmode]", state.settings.opmode, "data-opmode");
-        setActiveSeg(".segBtn[data-range]", state.settings.range, "data-range");
-        setActiveSeg(".segBtn[data-seconds]", state.settings.seconds, "data-seconds");
+        setActiveSeg('.segBtn[data-opmode]', state.settings.opmode, 'data-opmode')
+        setActiveSeg('.segBtn[data-range]', state.settings.range, 'data-range')
 
-        const showSum10 = (state.settings.opmode === "add" || state.settings.opmode === "mix");
-        sum10Card.classList.toggle("hidden", !showSum10);
-        if (!showSum10) state.settings.sum10 = false;
-        chkSum10.checked = !!state.settings.sum10;
+        const showSum10 = (state.settings.opmode === 'add' || state.settings.opmode === 'mix')
+        sum10Card.classList.toggle('hidden', !showSum10)
+        if (!showSum10) state.settings.sum10 = false
+        chkSum10.checked = !!state.settings.sum10
       }
 
-      function opSymbol(op) {
-        return op === "add" ? "+" : "−";
-      }
-
-      function makeKey(op, left, right) {
-        return `${op}:${left}:${right}`;
-      }
+      function opSymbol(op) { return op === 'add' ? '+' : '−' }
+      function makeKey(op,left,right) { return `${op}:${left}:${right}` }
 
       function getHist(key) {
-        const h = state.history[key];
-        if (h && typeof h === "object") return h;
-        const init = { shown: 0, correct: 0, weight: 1.0, last_at: 0 };
-        state.history[key] = init;
-        return init;
+        const h = state.history[key]
+        if (h && typeof h === 'object') return h
+        const init = { shown: 0, correct: 0, weight: 1.0, last_at: 0 }
+        state.history[key] = init
+        return init
       }
 
       function updateWeight(key, isCorrect) {
-        const h = getHist(key);
-        h.shown += 1;
+        const h = getHist(key)
+        h.shown += 1
         if (isCorrect) {
-          h.correct += 1;
-          h.weight = Math.max(0.3, +(h.weight * 0.8).toFixed(6));
+          h.correct += 1
+          h.weight = Math.max(0.3, +(h.weight * 0.8).toFixed(6))
         } else {
-          h.weight = Math.min(3.0, +(h.weight * 1.25).toFixed(6));
+          h.weight = Math.min(3.0, +(h.weight * 1.25).toFixed(6))
         }
-        h.last_at = Date.now();
-      }
-
-      function addSessionDelta(key, isCorrect) {
-        const k = String(key || "");
-        if (!k) return;
-        if (!state.sessionDelta || typeof state.sessionDelta !== "object") state.sessionDelta = {};
-        const cur = state.sessionDelta[k] || { shown: 0, correct: 0 };
-        cur.shown += 1;
-        if (isCorrect) cur.correct += 1;
-        state.sessionDelta[k] = cur;
+        h.last_at = Date.now()
       }
 
       function getRangeSpec() {
-        const r = state.settings.range;
-        if (r === "c2a") return { aMin: 1, aMax: 9, bMin: 1, bMax: 9, mode: "both" };
-        if (r === "c2b") return { aMin: 1, aMax: 19, bMin: 1, bMax: 19, mode: "both" };
-        return { aMin: 10, aMax: 99, bMin: 1, bMax: 9, mode: "one2digit" };
+        const r = state.settings.range
+        if (r === 'c2a') return { aMin: 1, aMax: 9, bMin: 1, bMax: 9, mode: 'both' }
+        if (r === 'c2b') return { aMin: 1, aMax: 19, bMin: 1, bMax: 19, mode: 'both' }
+        return { aMin: 10, aMax: 99, bMin: 1, bMax: 9, mode: 'one2digit' }
       }
 
       function listCandidatesForOp(op) {
-        const spec = getRangeSpec();
-        const sum10 = !!state.settings.sum10;
-        const out = [];
+        const spec = getRangeSpec()
+        const sum10 = !!state.settings.sum10
+        const out = []
 
-        if (spec.mode === "both") {
+        if (spec.mode === 'both') {
           for (let a = spec.aMin; a <= spec.aMax; a++) {
             for (let b = spec.bMin; b <= spec.bMax; b++) {
-              if (op === "add") {
-                const ans = a + b;
-                if (sum10 && ans > 10) continue;
-                out.push({ op, left: a, right: b, answer: ans, key: makeKey(op, a, b) });
+              if (op === 'add') {
+                const ans = a + b
+                if (sum10 && ans > 10) continue
+                out.push({ op, left: a, right: b, answer: ans, key: makeKey(op,a,b) })
               } else {
-                const left = Math.max(a, b);
-                const right = Math.min(a, b);
-                out.push({ op, left, right, answer: left - right, key: makeKey(op, left, right) });
+                const left = Math.max(a,b)
+                const right = Math.min(a,b)
+                out.push({ op, left, right, answer: left - right, key: makeKey(op,left,right) })
               }
             }
           }
         } else {
           for (let two = spec.aMin; two <= spec.aMax; two++) {
             for (let one = spec.bMin; one <= spec.bMax; one++) {
-              if (op === "add") {
-                let a = two, b = one;
-                let ans = a + b;
-                if (!(sum10 && ans > 10)) out.push({ op, left: a, right: b, answer: ans, key: makeKey(op, a, b) });
-
-                a = one; b = two;
-                ans = a + b;
-                if (!(sum10 && ans > 10)) out.push({ op, left: a, right: b, answer: ans, key: makeKey(op, a, b) });
+              if (op === 'add') {
+                let a = two, b = one
+                let ans = a + b
+                if (!(sum10 && ans > 10)) out.push({ op, left:a, right:b, answer:ans, key: makeKey(op,a,b) })
+                a = one; b = two
+                ans = a + b
+                if (!(sum10 && ans > 10)) out.push({ op, left:a, right:b, answer:ans, key: makeKey(op,a,b) })
               } else {
-                let left = two, right = one;
-                if (left < right) [left, right] = [right, left];
-                out.push({ op, left, right, answer: left - right, key: makeKey(op, left, right) });
-
-                left = one; right = two;
-                if (left < right) [left, right] = [right, left];
-                out.push({ op, left, right, answer: left - right, key: makeKey(op, left, right) });
+                let left = two, right = one
+                if (left < right) [left,right] = [right,left]
+                out.push({ op, left, right, answer: left-right, key: makeKey(op,left,right) })
+                left = one; right = two
+                if (left < right) [left,right] = [right,left]
+                out.push({ op, left, right, answer: left-right, key: makeKey(op,left,right) })
               }
             }
           }
-
-          const seen = new Set();
-          const uniq = [];
+          const seen = new Set()
+          const uniq = []
           for (const p of out) {
-            if (seen.has(p.key)) continue;
-            seen.add(p.key);
-            uniq.push(p);
+            if (seen.has(p.key)) continue
+            seen.add(p.key)
+            uniq.push(p)
           }
-          return uniq;
+          return uniq
         }
 
-        if (op === "sub") {
-          const seen = new Set();
-          const uniq = [];
+        if (op === 'sub') {
+          const seen = new Set()
+          const uniq = []
           for (const p of out) {
-            if (seen.has(p.key)) continue;
-            seen.add(p.key);
-            uniq.push(p);
+            if (seen.has(p.key)) continue
+            seen.add(p.key)
+            uniq.push(p)
           }
-          return uniq;
+          return uniq
         }
-
-        return out;
+        return out
       }
 
       function listCandidatesBySettings() {
-        const m = state.settings.opmode;
-        if (m === "add") return listCandidatesForOp("add");
-        if (m === "sub") return listCandidatesForOp("sub");
-        return listCandidatesForOp("add").concat(listCandidatesForOp("sub"));
+        const m = state.settings.opmode
+        if (m === 'add') return listCandidatesForOp('add')
+        if (m === 'sub') return listCandidatesForOp('sub')
+        return listCandidatesForOp('add').concat(listCandidatesForOp('sub'))
       }
 
       function weightedPick(candidates) {
-        const filtered = candidates.filter(c => c.key !== state.prevKey);
-        const pool = filtered.length ? filtered : candidates;
+        const filtered = candidates.filter(c => c.key !== state.prevKey)
+        const pool = filtered.length ? filtered : candidates
 
-        let total = 0;
-        const weights = new Array(pool.length);
+        let total = 0
+        const weights = new Array(pool.length)
         for (let i = 0; i < pool.length; i++) {
-          const h = state.history[pool[i].key];
-          const w = (h && typeof h.weight === "number") ? h.weight : 1.0;
-          weights[i] = w;
-          total += w;
+          const h = state.history[pool[i].key]
+          const w = (h && typeof h.weight === 'number') ? h.weight : 1.0
+          weights[i] = w
+          total += w
         }
-
-        let r = Math.random() * total;
+        let r = Math.random() * total
         for (let i = 0; i < pool.length; i++) {
-          r -= weights[i];
-          if (r <= 0) return pool[i];
+          r -= weights[i]
+          if (r <= 0) return pool[i]
         }
-        return pool[pool.length - 1];
+        return pool[pool.length - 1]
       }
 
-      function formatProblem(p) {
-        return `${p.left} ${opSymbol(p.op)} ${p.right}`;
-      }
-
-      function clearTimer() {
-        if (state.timer) {
-          clearInterval(state.timer);
-          state.timer = null;
-        }
-      }
-
-      function syncUI() {
-        // できた／ちがった は「答えが出たタイミング」でだけ出す
-        const show = (state.phase === "reveal");
-
-        // 答えは visibility で場所を確保しつつ出し分け
-        elAnswer.classList.toggle("hidden", !show);
-
-        // ボタンは display / hidden の両方で確実に隠す
-        if (show) {
-          elControlsReveal.classList.remove("hidden");
-          elControlsReveal.hidden = false;
-        } else {
-          elControlsReveal.classList.add("hidden");
-          elControlsReveal.hidden = true;
-        }
-      }
+      function formatProblem(p) { return `${p.left} ${opSymbol(p.op)} ${p.right}` }
 
       function updateProgressUI() {
-        const done = state.sessionTotal;
-        const current = Math.min(done + 1, LIMIT);
-        const remainingAll = Math.max(LIMIT - done, 0);
-
-        elProgressText.innerHTML = `いま <span class="numBig">${current}</span>もんめ / <span class="numBig">${LIMIT}</span>もん`;
-        elProgressText2.innerHTML = `のこり <span class="numBig">${remainingAll}</span>もん`;
-
-        const pct = Math.max(0, Math.min(100, (done / LIMIT) * 100));
-        elProgressFill.style.width = `${pct}%`;
+        const done = state.sessionTotal
+        const current = Math.min(done + 1, LIMIT)
+        const remainingAll = Math.max(LIMIT - done, 0)
+        elProgressText.innerHTML = `いま <span class='numBig'>${current}</span>もんめ / <span class='numBig'>${LIMIT}</span>もん`
+        elProgressText2.innerHTML = `のこり <span class='numBig'>${remainingAll}</span>もん`
+        const pct = Math.max(0, Math.min(100, (done / LIMIT) * 100))
+        elProgressFill.style.width = `${pct}%`
       }
 
-      function startTimer() {
-        clearTimer();
+      function setInputUI() {
+        const s = state.input
+        if (s && s.length) {
+          elAnswerPlaceholder.classList.add('hidden')
+          elAnswerInput.classList.remove('hidden')
+          elAnswerInput.textContent = s
+        } else {
+          elAnswerInput.classList.add('hidden')
+          elAnswerPlaceholder.classList.remove('hidden')
+          elAnswerPlaceholder.textContent = 'こたえを いれてね'
+        }
+      }
 
-        state.timer = setInterval(() => {
-          state.remaining -= 1;
+      function lockInput(lock) {
+        state.locked = !!lock
+        const disabled = state.locked
+        if (keypad) {
+          keypad.querySelectorAll('button').forEach(b => b.disabled = disabled)
+        }
+        btnClear.disabled = disabled
+      }
 
-          // 0 まで表示したいので、先に描画更新
-          const n = Math.max(state.remaining, 0);
-          elCountdown.textContent = TEXT.countdown(n);
+      function showJudge(mark, correctAnswer, typed) {
+        elJudgeMark.textContent = mark
+        if (mark === '⭕') {
+          elJudgeSubPill.textContent = 'できた'
+        } else {
+          elJudgeSubPill.textContent = `こたえ: ${correctAnswer} / あなた: ${typed || '-'}`
+        }
+        elJudgeOverlay.classList.remove('hidden')
+      }
 
-          if (state.remaining <= 0) {
-            clearTimer();
-            setTimeout(() => revealAnswer(), 0);
-          }
-        }, 1000);
+      function hideJudge() {
+        elJudgeOverlay.classList.add('hidden')
       }
 
       function startQuestion() {
-        clearTimer();
-        state.phase = "question";
-        syncUI();
+        state.phase = 'question'
+        state.lastJudge = null
+        state.input = ''
+        setInputUI()
+        hideJudge()
 
-        if (elBottomControls) elBottomControls.classList.remove("hidden");
-        updateProgressUI();
+        lockInput(false)
+        btnNext.disabled = true
 
-        const candidates = listCandidatesBySettings();
+        updateProgressUI()
+
+        const candidates = listCandidatesBySettings()
         if (!candidates.length) {
-          setStatus("もんだいが ありません。せっていを みなおしてね");
-          showSettings();
-          return;
+          setStatus('もんだいが ありません。せっていを みなおしてね')
+          showSettings()
+          return
         }
+        const p = weightedPick(candidates)
+        state.current = p
+        state.prevKey = p.key
 
-        const p = weightedPick(candidates);
-        state.current = p;
-        state.prevKey = p.key;
+        elProblem.textContent = formatProblem(p)
 
-        elProblem.textContent = formatProblem(p);
-        elAnswer.textContent = String(p.answer);
-
-        state.remaining = Number(state.settings.seconds) || 3;
-        elCountdown.textContent = TEXT.countdown(state.remaining);
-        startTimer();
-      }
-
-      function revealAnswer() {
-        clearTimer();
-        state.phase = "reveal";
-        syncUI();
+        elResult.classList.add('hidden')
+        btnBackToSettings.classList.add('hidden')
       }
 
       function formatDuration(ms) {
-        const sec = Math.max(0, Math.floor(ms / 1000));
-        const m = Math.floor(sec / 60);
-        const s = sec % 60;
-        if (m <= 0) return `${s} びょう`;
-        return `${m} ふん ${String(s).padStart(2, "0")} びょう`;
+        const sec = Math.max(0, Math.floor(ms / 1000))
+        const m = Math.floor(sec / 60)
+        const s = sec % 60
+        if (m <= 0) return `${s} びょう`
+        return `${m} ふん ${String(s).padStart(2,'0')} びょう`
       }
 
       function stop() {
-        clearTimer();
-        state.current = null;
+        state.phase = 'stopped'
+        state.current = null
+        lockInput(true)
+        btnNext.disabled = true
 
-        // 結果表示後は「問題画面のまま固定」
-        state.phase = "stopped";
-        syncUI();
-
-        if (elBottomControls) elBottomControls.classList.add("hidden");
-
-        const durationMs = state.sessionStartAt ? (Date.now() - state.sessionStartAt) : 0;
+        const durationMs = state.sessionStartAt ? (Date.now() - state.sessionStartAt) : 0
 
         if (state.sessionTotal > 0 && !state.sessionSaved) {
-          const sessionId = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
           const rec = {
-            id: sessionId,
+            id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
             at: Date.now(),
             total: state.sessionTotal,
             correct: state.sessionCorrect,
             duration_ms: durationMs,
             settings: { ...state.settings },
-            delta: { ...state.sessionDelta }
-          };
-          state.sessions.unshift(rec);
-          state.sessions = state.sessions.slice(0, 200);
-          saveSessions();
-          state.sessionSaved = true;
+            items: state.sessionItems.slice()
+          }
+          state.sessions.unshift(rec)
+          state.sessions = state.sessions.slice(0, 200)
+          saveSessions()
+          state.sessionSaved = true
         }
 
         if (state.sessionTotal > 0) {
-          const durText = durationMs ? formatDuration(durationMs) : "-";
+          const durText = durationMs ? formatDuration(durationMs) : '-'
           elResult.innerHTML =
-            `<div class="resultLine"><span class="numHuge">${state.sessionTotal}</span>もん おわり！</div>` +
-            `<div class="resultLine"><span class="numHuge">${state.sessionCorrect}</span>もん できたよ！</div>` +
-            `<div class="resultMeta">じかん: ${durText}</div>`;
-          elResult.classList.remove("hidden");
-          btnBackToSettings.classList.remove("hidden");
+            `<div class='resultLine'><span class='numHuge'>${state.sessionTotal}</span>もん おわり！</div>` +
+            `<div class='resultLine'><span class='numHuge'>${state.sessionCorrect}</span>もん できたよ！</div>` +
+            `<div class='resultMeta'>じかん: ${durText}</div>`
+          elResult.classList.remove('hidden')
+          btnBackToSettings.classList.remove('hidden')
         }
       }
 
-      function submitResult(isCorrect) {
-        // 結果固定中（stopped）などは無視
-        if (!state.current) return;
-        if (state.phase !== "reveal") return;
+      function submitAnswer() {
+        if (!state.current) return
+        if (state.locked) return
 
-        state.sessionTotal += 1;
-        if (isCorrect) state.sessionCorrect += 1;
+        const typedRaw = String(state.input || '').trim()
+        if (!typedRaw.length) {
+          elAnswerPlaceholder.textContent = 'すうじを いれてね'
+          return
+        }
+        const typed = Number(typedRaw)
+        if (!Number.isFinite(typed)) {
+          elAnswerPlaceholder.textContent = 'すうじだけ いれてね'
+          state.input = ''
+          setInputUI()
+          return
+        }
 
-        updateWeight(state.current.key, isCorrect);
-        addSessionDelta(state.current.key, isCorrect);
-        saveHistory();
+        const correct = (typed === state.current.answer)
 
-        updateProgressUI();
+        state.sessionTotal += 1
+        if (correct) state.sessionCorrect += 1
+
+        updateWeight(state.current.key, correct)
+        saveHistory()
+
+        state.sessionItems.push({ key: state.current.key, correct })
+
+        showJudge(correct ? '⭕' : '✕', state.current.answer, typedRaw)
+
+        lockInput(true)
+        btnNext.disabled = false
+
+        updateProgressUI()
 
         if (state.sessionTotal >= LIMIT) {
-          stop();
-          return;
+          stop()
+          return
         }
-
-        startQuestion();
       }
 
-      function resetHistory() {
-        state.history = {};
-        saveHistory();
-        setStatus("もんだい りれきを りせっと しました");
-        if (state.phase === "history") renderHistory();
+      function nextAfterJudge() {
+        if (state.phase === 'stopped') return
+        if (btnNext.disabled) return
+        startQuestion()
       }
 
-      function resetSessions() {
-        state.sessions = [];
-        saveSessions();
-        setStatus("50もん きろくを りせっと しました");
-        if (state.phase === "history") renderSessions();
+      function appendDigit(d) {
+        if (state.locked) return
+        const s = String(state.input || '')
+        if (s.length >= 4) return
+        state.input = s + d
+        setInputUI()
+      }
+
+      function backspace() {
+        if (state.locked) return
+        const s = String(state.input || '')
+        state.input = s.slice(0, -1)
+        setInputUI()
+      }
+
+      function clearInput() {
+        if (state.locked) return
+        state.input = ''
+        setInputUI()
       }
 
       function formatJst(ts) {
-        if (!ts) return "";
+        if (!ts) return ''
         try {
-          const d = new Date(ts);
-          const y = d.getFullYear();
-          const m = String(d.getMonth() + 1).padStart(2, "0");
-          const day = String(d.getDate()).padStart(2, "0");
-          const hh = String(d.getHours()).padStart(2, "0");
-          const mm = String(d.getMinutes()).padStart(2, "0");
-          return `${y}-${m}-${day} ${hh}:${mm}`;
-        } catch {
-          return "";
-        }
+          const d = new Date(ts)
+          const y = d.getFullYear()
+          const m = String(d.getMonth() + 1).padStart(2,'0')
+          const day = String(d.getDate()).padStart(2,'0')
+          const hh = String(d.getHours()).padStart(2,'0')
+          const mm = String(d.getMinutes()).padStart(2,'0')
+          return `${y}-${m}-${day} ${hh}:${mm}`
+        } catch { return '' }
       }
 
       function parseKey(key) {
-        const parts = String(key).split(":");
-        if (parts.length !== 3) return { op: "", left: "", right: "" };
-        return { op: parts[0], left: parts[1], right: parts[2] };
-      }
-
-      function clampInt(n) {
-        const x = Number(n);
-        if (!Number.isFinite(x)) return 0;
-        return Math.max(0, Math.floor(x));
-      }
-
-      function recomputeLastAtForKey(key) {
-        loadSessions();
-        let last = 0;
-        for (const s of state.sessions) {
-          if (!s || typeof s !== "object") continue;
-          const d = s.delta;
-          if (!d || typeof d !== "object") continue;
-          if (d[key] && (Number(d[key].shown) || 0) > 0) {
-            const at = Number(s.at) || 0;
-            if (at > last) last = at;
-          }
-        }
-        return last;
-      }
-
-      function deleteOneSession(sessionId) {
-        loadSessions();
-        loadHistory();
-
-        const sid = String(sessionId || "");
-        const idx = state.sessions.findIndex(s => s && String(s.id) === sid);
-        if (idx < 0) {
-          setStatus("そのセットが みつからなかったよ");
-          return;
-        }
-
-        const sess = state.sessions[idx];
-        const delta = (sess && typeof sess === "object") ? sess.delta : null;
-
-        // まずセットを削除
-        state.sessions.splice(idx, 1);
-        saveSessions();
-
-        // delta がある場合のみ、もんだい べつ を差し引く
-        if (delta && typeof delta === "object") {
-          const keys = Object.keys(delta);
-          for (const k of keys) {
-            const d = delta[k];
-            const subShown = clampInt(d && d.shown);
-            const subCorrect = clampInt(d && d.correct);
-            if (subShown <= 0 && subCorrect <= 0) continue;
-
-            const h = state.history[k];
-            if (!h || typeof h === "object" && !h) continue;
-            if (!h || typeof h !== "object") continue;
-
-            const newShown = clampInt((h.shown || 0) - subShown);
-            const newCorrect = clampInt((h.correct || 0) - subCorrect);
-
-            if (newShown <= 0) {
-              delete state.history[k];
-              continue;
-            }
-
-            h.shown = newShown;
-            h.correct = Math.min(newCorrect, newShown);
-
-            // さいご は残りセットから再計算（delta がない古いセットは反映できない）
-            h.last_at = recomputeLastAtForKey(k);
-          }
-
-          saveHistory();
-          setStatus("そのセットを けしたよ。もんだい べつ も へらしたよ");
-        } else {
-          setStatus("そのセットを けしたよ（このセットは もんだい ないようが ほぞん されていないよ）");
-        }
-
-        renderHistory();
-        renderSessions();
+        const parts = String(key).split(':')
+        if (parts.length !== 3) return { op:'', left:'', right:'' }
+        return { op: parts[0], left: parts[1], right: parts[2] }
       }
 
       function renderHistory() {
-        loadHistory();
-        loadSessions();
+        loadHistory()
+        loadSessions()
 
         const entries = Object.entries(state.history)
-          .filter(([k, v]) => v && typeof v === "object")
-          .map(([k, v]) => ({
+          .filter(([k,v]) => v && typeof v === 'object')
+          .map(([k,v]) => ({
             key: k,
             shown: Number(v.shown) || 0,
             correct: Number(v.correct) || 0,
-            weight: (typeof v.weight === "number") ? v.weight : Number(v.weight) || 0,
+            weight: (typeof v.weight === 'number') ? v.weight : Number(v.weight) || 0,
             last_at: Number(v.last_at) || 0
-          }));
+          }))
 
-        const totalProblems = entries.length;
-        const totalShown = entries.reduce((a, e) => a + e.shown, 0);
-        const totalCorrect = entries.reduce((a, e) => a + e.correct, 0);
+        const totalProblems = entries.length
+        const totalShown = entries.reduce((a,e) => a + e.shown, 0)
+        const totalCorrect = entries.reduce((a,e) => a + e.correct, 0)
 
-        elHistorySummary.textContent = `もんだい: ${totalProblems}しゅるい / でた: ${totalShown}かい / できた: ${totalCorrect}かい / 50もん きろく: ${state.sessions.length}かい`;
+        elHistorySummary.textContent =
+          `もんだい: ${totalProblems}しゅるい / でた: ${totalShown}かい / できた: ${totalCorrect}かい / 50もん きろく: ${state.sessions.length}かい`
 
-        entries.sort((a, b) => {
-          const ra = a.shown > 0 ? (a.correct / a.shown) : 0;
-          const rb = b.shown > 0 ? (b.correct / b.shown) : 0;
-          if (ra !== rb) return ra - rb;
-          if (b.shown !== a.shown) return b.shown - a.shown;
-          return b.last_at - a.last_at;
-        });
+        entries.sort((a,b) => {
+          const ra = a.shown > 0 ? (a.correct / a.shown) : 0
+          const rb = b.shown > 0 ? (b.correct / b.shown) : 0
+          if (ra !== rb) return ra - rb
+          if (b.shown !== a.shown) return b.shown - a.shown
+          return b.last_at - a.last_at
+        })
 
         if (!entries.length) {
-          elHistoryTable.innerHTML = `<tr><td colspan="6" class="muted">りれきが ありません</td></tr>`;
-          return;
+          elHistoryTable.innerHTML = `<tr><td colspan='6' class='muted'>りれきが ありません</td></tr>`
+          return
         }
 
-        const rows = entries.map(e => {
-          const { op, left, right } = parseKey(e.key);
-          const expr = `${left} ${opSymbol(op)} ${right}`;
-          const rate = e.shown > 0 ? Math.round((e.correct / e.shown) * 100) : 0;
-          const last = formatJst(e.last_at);
-          const w = (typeof e.weight === "number") ? e.weight.toFixed(3) : String(e.weight);
-
+        elHistoryTable.innerHTML = entries.map(e => {
+          const { op, left, right } = parseKey(e.key)
+          const expr = `${left} ${opSymbol(op)} ${right}`
+          const rate = e.shown > 0 ? Math.round((e.correct / e.shown) * 100) : 0
+          const last = formatJst(e.last_at)
+          const w = (typeof e.weight === 'number') ? e.weight.toFixed(3) : String(e.weight)
           return (
             `<tr>` +
               `<td>${expr}</td>` +
-              `<td class="right">${e.shown}</td>` +
-              `<td class="right">${e.correct}</td>` +
-              `<td class="right">${rate}%</td>` +
-              `<td><span class="pill">${last || "-"}</span></td>` +
-              `<td class="right">${w}</td>` +
+              `<td class='right'>${e.shown}</td>` +
+              `<td class='right'>${e.correct}</td>` +
+              `<td class='right'>${rate}%</td>` +
+              `<td><span class='pill'>${last || '-'}</span></td>` +
+              `<td class='right'>${w}</td>` +
             `</tr>`
-          );
-        }).join("");
-
-        elHistoryTable.innerHTML = rows;
+          )
+        }).join('')
       }
 
       function renderSessions() {
-        loadSessions();
-
-        if (!elSessionTable) return;
-
+        loadSessions()
         if (!state.sessions.length) {
-          elSessionTable.innerHTML = `<tr><td colspan="7" class="muted">50もん きろくが ありません</td></tr>`;
-          return;
+          elSessionTable.innerHTML = `<tr><td colspan='7' class='muted'>50もん きろくが ありません</td></tr>`
+          return
         }
 
-        const rows = state.sessions.map((s, idx) => {
-          const at = formatJst(s.at);
-          const total = Number(s.total) || 0;
-          const correct = Number(s.correct) || 0;
-          const rate = total > 0 ? Math.round((correct / total) * 100) : 0;
-          const dur = (typeof s.duration_ms === "number") ? formatDuration(s.duration_ms) : "-";
+        elSessionTable.innerHTML = state.sessions.map(s => {
+          const at = formatJst(s.at)
+          const total = Number(s.total) || 0
+          const correct = Number(s.correct) || 0
+          const rate = total > 0 ? Math.round((correct / total) * 100) : 0
+          const dur = (typeof s.duration_ms === 'number') ? formatDuration(s.duration_ms) : '-'
 
-          const st = s.settings || {};
-          const op = st.opmode === "add" ? "たし" : (st.opmode === "sub" ? "ひき" : "まぜ");
-          const range = st.range === "c2a" ? "1-9" : (st.range === "c2b" ? "1-19" : "10-99");
-          const sec = st.seconds ? `${st.seconds}びょう` : "";
-          const sum10 = st.sum10 ? "10まで" : "";
-          const settingText = [op, range, sec, sum10].filter(Boolean).join(" / ");
+          const st = s.settings || {}
+          const op = st.opmode === 'add' ? 'たし' : (st.opmode === 'sub' ? 'ひき' : 'まぜ')
+          const range = st.range === 'c2a' ? '1-9' : (st.range === 'c2b' ? '1-19' : '10-99')
+          const sum10 = st.sum10 ? '10まで' : ''
+          const settingText = [op, range, sum10].filter(Boolean).join(' / ')
 
-          const sid = s.id ? String(s.id) : `${s.at || Date.now()}_${idx}`;
+          const id = s.id ? String(s.id) : ''
+          const delBtn = id
+            ? `<button class='btn subtle' data-del-session='${id}' type='button'>けす</button>`
+            : `<span class='muted'>-</span>`
 
           return (
             `<tr>` +
-              `<td><span class="pill">${at || "-"}</span></td>` +
-              `<td class="right">${total}</td>` +
-              `<td class="right">${correct}</td>` +
-              `<td class="right">${rate}%</td>` +
-              `<td class="right">${dur}</td>` +
+              `<td><span class='pill'>${at || '-'}</span></td>` +
+              `<td class='right'>${total}</td>` +
+              `<td class='right'>${correct}</td>` +
+              `<td class='right'>${rate}%</td>` +
+              `<td class='right'>${dur}</td>` +
               `<td>${settingText}</td>` +
-              `<td class="right"><button class="btn subtle tiny btnSessionDelete" data-session-id="${sid}" type="button">けす</button></td>` +
+              `<td class='right'>${delBtn}</td>` +
             `</tr>`
-          );
-        }).join("");
-
-        elSessionTable.innerHTML = rows;
-
-        document.querySelectorAll(".btnSessionDelete").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const sid = btn.getAttribute("data-session-id");
-            openConfirm("deleteSession", sid);
-          });
-        });
+          )
+        }).join('')
       }
 
-      function openConfirm(kind, sessionId) {
-        const k = String(kind || "");
-        state.pendingAction = { kind: k, sessionId: sessionId ? String(sessionId) : "" };
-
-        if (k === "history") {
-          elConfirmText.textContent = "もんだい りれきを ぜんぶ けします。いい？";
-        } else if (k === "sessions") {
-          elConfirmText.textContent = "50もん きろくを ぜんぶ けします。いい？";
-        } else if (k === "deleteSession") {
-          elConfirmText.textContent = "このセットを けします。もんだい べつ の でた/できた も へらすよ。いい？";
-        } else {
-          elConfirmText.textContent = "かくにん";
-        }
-
-        elConfirm.classList.remove("hidden");
+      function openConfirm(kind) {
+        state.pendingReset = kind
+        if (kind === 'history') elConfirmText.textContent = 'もんだい りれきを ぜんぶ けします。いい？'
+        else if (kind === 'sessions') elConfirmText.textContent = '50もん きろくを ぜんぶ けします。いい？'
+        else elConfirmText.textContent = 'じっこう しますか？'
+        elConfirm.classList.remove('hidden')
       }
 
       function closeConfirm() {
-        elConfirm.classList.add("hidden");
-        state.pendingAction = null;
+        elConfirm.classList.add('hidden')
+        state.pendingReset = null
+      }
+
+      function resetHistory() {
+        state.history = {}
+        saveHistory()
+        setStatus('もんだい りれきを りせっと しました')
+        if (state.phase === 'history') renderHistory()
+      }
+
+      function resetSessions() {
+        state.sessions = []
+        saveSessions()
+        setStatus('50もん きろくを りせっと しました')
+        if (state.phase === 'history') renderSessions()
+      }
+
+      function deleteSessionById(sessionId) {
+        loadSessions()
+        const idx = state.sessions.findIndex(s => String(s.id) === String(sessionId))
+        if (idx < 0) return
+
+        const target = state.sessions[idx]
+        const items = Array.isArray(target.items) ? target.items : []
+
+        // 問題履歴の差し戻し
+        loadHistory()
+        for (const it of items) {
+          const key = it && it.key ? String(it.key) : ''
+          if (!key) continue
+          const h = state.history[key]
+          if (!h || typeof h !== 'object') continue
+
+          const shown = Math.max((Number(h.shown) || 0) - 1, 0)
+          const correct = Math.max((Number(h.correct) || 0) - (it.correct ? 1 : 0), 0)
+
+          if (shown <= 0) {
+            // 0になったら行ごと削除
+            delete state.history[key]
+          } else {
+            h.shown = shown
+            h.correct = Math.min(correct, shown)
+            // weight と last_at は簡略に据え置き
+          }
+        }
+        saveHistory()
+
+        // セット削除
+        state.sessions.splice(idx, 1)
+        saveSessions()
+
+        setStatus('1セット さくじょ しました')
+        renderHistory()
+        renderSessions()
       }
 
       function wireUI() {
-        document.querySelectorAll(".segBtn[data-opmode]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            state.settings.opmode = btn.getAttribute("data-opmode");
-            if (state.settings.opmode === "sub") state.settings.sum10 = false;
-            saveSettings();
-            normalizeUIBySettings();
-          });
-        });
+        document.querySelectorAll('.segBtn[data-opmode]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            state.settings.opmode = btn.getAttribute('data-opmode')
+            if (state.settings.opmode === 'sub') state.settings.sum10 = false
+            saveSettings()
+            normalizeUIBySettings()
+          })
+        })
 
-        document.querySelectorAll(".segBtn[data-range]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            state.settings.range = btn.getAttribute("data-range");
-            saveSettings();
-            normalizeUIBySettings();
-          });
-        });
+        document.querySelectorAll('.segBtn[data-range]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            state.settings.range = btn.getAttribute('data-range')
+            saveSettings()
+            normalizeUIBySettings()
+          })
+        })
 
-        document.querySelectorAll(".segBtn[data-seconds]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            state.settings.seconds = Number(btn.getAttribute("data-seconds"));
-            saveSettings();
-            normalizeUIBySettings();
-          });
-        });
+        chkSum10.addEventListener('change', () => {
+          state.settings.sum10 = chkSum10.checked
+          saveSettings()
+          normalizeUIBySettings()
+        })
 
-        chkSum10.addEventListener("change", () => {
-          state.settings.sum10 = chkSum10.checked;
-          saveSettings();
-          normalizeUIBySettings();
-        });
+        btnStart.addEventListener('click', () => {
+          saveSettings()
+          state.sessionTotal = 0
+          state.sessionCorrect = 0
+          state.sessionSaved = false
+          state.sessionStartAt = Date.now()
+          state.sessionItems = []
 
-        btnStart.addEventListener("click", () => {
-          saveSettings();
+          elResult.innerHTML = ''
+          elResult.classList.add('hidden')
+          btnBackToSettings.classList.add('hidden')
 
-          state.sessionTotal = 0;
-          state.sessionCorrect = 0;
-          state.sessionSaved = false;
-          state.sessionStartAt = Date.now();
-          state.sessionDelta = {};
+          showQuiz()
+          startQuestion()
+        })
 
-          elResult.innerHTML = "";
-          elResult.classList.add("hidden");
-          btnBackToSettings.classList.add("hidden");
-          if (elBottomControls) elBottomControls.classList.remove("hidden");
+        btnToSettings.addEventListener('click', () => {
+          if (state.phase === 'history') { showSettings(); return }
+          if (!elSettings.classList.contains('hidden')) return
+          // 途中終了も可能にする
+          stop()
+          showSettings()
+        })
 
-          showQuiz();
-          startQuestion();
-        });
+        btnViewHistory.addEventListener('click', showHistory)
+        btnBackFromHistory.addEventListener('click', showSettings)
 
-        btnRevealNow.addEventListener("click", () => {
-          if (state.phase !== "question") return;
-          revealAnswer();
-        });
+        btnBackToSettings.addEventListener('click', () => {
+          elResult.classList.add('hidden')
+          btnBackToSettings.classList.add('hidden')
+          showSettings()
+        })
 
-        btnCorrect.addEventListener("click", () => submitResult(true));
-        btnWrong.addEventListener("click", () => submitResult(false));
+        btnResetHistory.addEventListener('click', () => openConfirm('history'))
+        if (btnResetHistory2) btnResetHistory2.addEventListener('click', () => openConfirm('history'))
+        if (btnResetSessions) btnResetSessions.addEventListener('click', () => openConfirm('sessions'))
 
-        // 右上は「せってい」または「おわる」
-        btnToSettings.addEventListener("click", () => {
-          if (!elSettings.classList.contains("hidden")) return;
+        document.querySelectorAll('.tabBtn[data-historytab]').forEach(btn => {
+          btn.addEventListener('click', () => setHistoryTab(btn.getAttribute('data-historytab')))
+        })
 
-          if (state.phase === "history") {
-            showSettings();
-            return;
-          }
+        btnConfirmCancel.addEventListener('click', closeConfirm)
+        btnConfirmOk.addEventListener('click', () => {
+          const kind = state.pendingReset
+          closeConfirm()
+          if (kind === 'history') resetHistory()
+          else if (kind === 'sessions') resetSessions()
+        })
+        elConfirm.addEventListener('click', (e) => { if (e.target === elConfirm) closeConfirm() })
 
-          stop();
-        });
+        btnNext.addEventListener('click', nextAfterJudge)
+        btnClear.addEventListener('click', clearInput)
 
-        // りせっとは かくにん してから
-        btnResetHistory.addEventListener("click", () => openConfirm("history"));
-        if (btnResetHistory2) btnResetHistory2.addEventListener("click", () => openConfirm("history"));
-        if (btnResetSessions) btnResetSessions.addEventListener("click", () => openConfirm("sessions"));
+        keypad.addEventListener('click', (e) => {
+          const btn = e.target.closest('button')
+          if (!btn) return
+          const k = btn.getAttribute('data-key')
+          if (!k) return
+          if (k === 'ok') { submitAnswer(); return }
+          if (k === 'back') { backspace(); return }
+          if (/^[0-9]$/.test(k)) { appendDigit(k); return }
+        })
 
-        document.querySelectorAll(".tabBtn[data-historytab]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            setHistoryTab(btn.getAttribute("data-historytab"));
-          });
-        });
-
-        btnViewHistory.addEventListener("click", showHistory);
-        btnBackFromHistory.addEventListener("click", showSettings);
-
-        btnBackToSettings.addEventListener("click", () => {
-          elResult.classList.add("hidden");
-          btnBackToSettings.classList.add("hidden");
-          if (elBottomControls) elBottomControls.classList.remove("hidden");
-          showSettings();
-        });
-
-        // かくにん ダイアログ
-        btnConfirmCancel.addEventListener("click", closeConfirm);
-        btnConfirmOk.addEventListener("click", () => {
-          const act = state.pendingAction;
-          closeConfirm();
-          if (!act || typeof act !== "object") return;
-
-          if (act.kind === "history") resetHistory();
-          else if (act.kind === "sessions") resetSessions();
-          else if (act.kind === "deleteSession") deleteOneSession(act.sessionId);
-        });
-
-        // うしろの くろい ところを おしても とじる
-        elConfirm.addEventListener("click", (e) => {
-          if (e.target === elConfirm) closeConfirm();
-        });
+        // 履歴テーブル内のセット削除
+        elSessionTable.addEventListener('click', (e) => {
+          const b = e.target.closest('button[data-del-session]')
+          if (!b) return
+          const id = b.getAttribute('data-del-session')
+          if (!id) return
+          // ここは確認を挟みたければ openConfirm を拡張できる
+          deleteSessionById(id)
+        })
       }
 
       function init() {
-        loadSettings();
-        loadHistory();
-        loadSessions();
-
-        wireUI();
-        normalizeUIBySettings();
-
-        btnStart.textContent = TEXT.start;
-        btnRevealNow.textContent = TEXT.revealNow;
-        btnCorrect.textContent = TEXT.correct;
-        btnWrong.textContent = TEXT.wrong;
-
-        setStatus("");
-        showSettings();
+        loadSettings()
+        loadHistory()
+        loadSessions()
+        wireUI()
+        normalizeUIBySettings()
+        setStatus('')
+        showSettings()
       }
 
-      init();
-    })();
+      init()
+    })()
   </script>
 </body>
 </html>
