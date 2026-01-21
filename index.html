@@ -1234,21 +1234,21 @@
         const rate = total > 0 ? Math.round((correct / total) * 100) : 0
         const dur = (typeof s.duration_ms === 'number') ? formatDuration(s.duration_ms) : '-'
       
-        elSessionModalMeta.textContent = `いつ: ${at || '-'} / できた: ${correct}/${total} / せいかいりつ: ${rate}% / じかん: ${dur}`
+        elSessionModalMeta.textContent =
+          `いつ: ${at || '-'} / できた: ${correct}/${total} / せいかいりつ: ${rate}% / じかん: ${dur}`
       
         const items = Array.isArray(s.items) ? s.items : []
       
-        
-        // 追加: 問題ごとの「でた / できた / せいかいりつ」を出すために履歴を読む
+        // 問題ごとの でた / できた / せいかいりつ は全履歴から算出
         loadHistory()
         const statsForKey = (key) => {
           const h = state.history && state.history[key]
           const shown = h ? (Number(h.shown) || 0) : 0
           const cor = h ? (Number(h.correct) || 0) : 0
-          const rate = (shown > 0) ? `${Math.round((cor / shown) * 100)}%` : '-'
-          return { shown, cor, rate }
+          const r = (shown > 0) ? `${Math.round((cor / shown) * 100)}%` : '-'
+          return { shown, cor, rate: r }
         }
-        
+      
         const rows = items.map((it, idx) => {
           const key = it && it.key ? String(it.key) : ''
           const ok = !!(it && it.correct)
@@ -1256,9 +1256,9 @@
           const expr = `${left} ${opSymbol(op)} ${right}`
           const markClass = ok ? 'markOk' : 'markNg'
           const markText = ok ? '〇' : '✖'
-        
+      
           const st = key ? statsForKey(key) : { shown: 0, cor: 0, rate: '-' }
-        
+      
           return (
             `<tr>` +
               `<td class='right'>${idx + 1}</td>` +
@@ -1270,7 +1270,7 @@
             `</tr>`
           )
         }).join('')
-        
+      
         elSessionModalBody.innerHTML =
           `<table>` +
             `<thead>` +
@@ -1285,7 +1285,6 @@
             `</thead>` +
             `<tbody>` + rows + `</tbody>` +
           `</table>`
-        }
       
         elSessionModal.classList.remove('hidden')
       }
