@@ -97,7 +97,6 @@
     .footer{padding:10px 14px 16px; color:var(--muted); font-size:12px;}
     .status{max-width:720px; margin:0 auto}
 
-    /* quiz layout */
     #screenQuiz{display:flex; flex-direction:column; min-height:100%;}
     #screenQuiz[hidden]{display:none !important;}
     #screenQuiz.hidden{display:none !important;}
@@ -122,26 +121,43 @@
       overflow:hidden;
     }
 
-    /* 横並びの式（入力は右にそのまま表示、□なし） */
+    /* 式が入力で揺れないように固定レイアウトにする */
     .exprRow{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      align-items:baseline;
+      gap:12px;
+      padding:10px 0 6px;
+      width:100%;
+    }
+    .exprLeft{
       display:flex;
       align-items:baseline;
       justify-content:center;
       gap:10px;
-      flex-wrap:wrap;
-      padding:10px 0 6px;
+      min-width:0;
     }
     .problem{
       font-size:56px;
       font-weight:900;
       letter-spacing:1px;
       line-height:1;
+      white-space:nowrap;
     }
     .eq{
       font-size:46px;
       font-weight:900;
       line-height:1;
       opacity:0.95;
+      white-space:nowrap;
+    }
+
+    /* 入力表示エリアを固定幅にして、式側が動かないようにする */
+    .typedSlot{
+      width: 6ch;
+      display:flex;
+      justify-content:flex-end;
+      align-items:baseline;
     }
     .typed{
       font-size:56px;
@@ -149,18 +165,18 @@
       letter-spacing:2px;
       line-height:1;
       min-width:1ch;
+      text-align:right;
     }
-    .typed.muted{
-      color:rgba(229,231,235,0.40);
-    }
+    .typed.muted{ color:rgba(229,231,235,0.40); }
 
     @media (max-width:420px){
       .problem{font-size:46px;}
       .eq{font-size:40px;}
       .typed{font-size:46px;}
+      .typedSlot{width: 5ch;}
     }
 
-    /* 判定マークは右上固定でかぶり回避 */
+    /* 判定マークはまっすぐ固定（斜め回転なし） */
     .judgeMark{
       position:absolute;
       top:10px;
@@ -171,11 +187,11 @@
       text-shadow: 0 10px 30px rgba(0,0,0,0.55);
       line-height:1;
       pointer-events:none;
-      transform: rotate(-8deg);
+      transform:none; /* ここが重要 */
     }
     .judgeMark.hidden{display:none;}
 
-    /* まちがい時の答え表示は式の下（大きめ） */
+    /* こたえ表示は入力より少し大きく */
     .answerLine{
       margin-top:10px;
       display:flex;
@@ -191,20 +207,20 @@
       border:1px solid rgba(255,255,255,0.12);
       color:rgba(229,231,235,0.96);
       font-weight:900;
-      font-size:28px;
+      font-size:60px; /* typed(56)より少し大きく */
       letter-spacing:0.5px;
       box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+      line-height:1;
+    }
+    @media (max-width:420px){
+      .answerPill{font-size:52px;}
     }
     .answerLine.hidden{display:none;}
 
-    /* ぜんぶけすは式の下 */
-    .underExprActions{
-      margin-top:12px;
-      display:flex;
-      justify-content:center;
-    }
+    .result{margin:10px 0; font-size:20px; font-weight:800; text-align:center;}
+    .resultMeta{margin-top:10px; font-size:14px; color:var(--muted);}
 
-    /* bottom fixed keypad */
+    /* bottom fixed keypad + ぜんぶけすを上に */
     .bottomDock{
       position:fixed;
       left:0;
@@ -218,6 +234,14 @@
     .dockInner{
       max-width:720px;
       margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .dockTopRow{
+      display:flex;
+      justify-content:center;
     }
 
     .keypad{
@@ -253,9 +277,6 @@
       transform:none;
     }
 
-    .result{margin:10px 0; font-size:20px; font-weight:800; text-align:center;}
-    .resultMeta{margin-top:10px; font-size:14px; color:var(--muted);}
-
     /* history */
     #screenHistory{min-height:100%; display:flex; flex-direction:column;}
     #screenHistory[hidden]{display:none !important;}
@@ -281,7 +302,6 @@
     .historyTabs .segBtn{flex:1; min-width:0; text-align:center; padding:10px 10px;}
     .tabBtn{min-width:0;}
 
-    /* confirm modal */
     .modal{
       position:fixed;
       inset:0;
@@ -372,20 +392,18 @@
 
         <div class='quizCard' id='quizCard'>
           <div class='exprRow'>
-            <div id='problem' class='problem'>-</div>
-            <div class='eq'>=</div>
-            <div id='typed' class='typed muted'> </div>
+            <div class='exprLeft'>
+              <div id='problem' class='problem'>-</div>
+              <div class='eq'>=</div>
+            </div>
+            <div class='typedSlot'>
+              <div id='typed' class='typed muted'> </div>
+            </div>
           </div>
 
           <div id='answerLine' class='answerLine hidden'>
             <span id='answerPill' class='answerPill'></span>
           </div>
-
-          <div class='underExprActions'>
-            <button id='btnClearAll' class='btn' type='button'>ぜんぶ けす</button>
-          </div>
-
-          <div id='judgeMark' class='judgeMark hidden'>⭕</div>
         </div>
 
         <div id='result' class='result hidden'></div>
@@ -469,6 +487,10 @@
 
   <div class='bottomDock hidden' id='bottomDock'>
     <div class='dockInner'>
+      <div class='dockTopRow'>
+        <button id='btnClearAll' class='btn' type='button'>ぜんぶ けす</button>
+      </div>
+
       <div class='keypad' id='keypad'>
         <button class='key' data-key='7' type='button'>7</button>
         <button class='key' data-key='8' type='button'>8</button>
@@ -520,7 +542,6 @@
       const elProgressText2 = $('progressText2')
       const elProgressFill = $('progressFill')
 
-      const elJudgeMark = $('judgeMark')
       const elAnswerLine = $('answerLine')
       const elAnswerPill = $('answerPill')
 
@@ -657,7 +678,6 @@
           elQuiz.style.paddingBottom = h ? `${h + 14}px` : ''
         } catch {}
       }
-
       window.addEventListener('resize', () => {
         if (!bottomDock.classList.contains('hidden')) syncBottomPadding()
       })
@@ -675,7 +695,6 @@
       function normalizeUIBySettings() {
         setActiveSeg('.segBtn[data-opmode]', state.settings.opmode, 'data-opmode')
         setActiveSeg('.segBtn[data-range]', state.settings.range, 'data-range')
-
         const showSum10 = (state.settings.opmode === 'add' || state.settings.opmode === 'mix')
         sum10Card.classList.toggle('hidden', !showSum10)
         if (!showSum10) state.settings.sum10 = false
@@ -824,23 +843,14 @@
         }
       }
 
-      function setJudgedUI(mark, showAnswer) {
-        if (!mark) {
-          elJudgeMark.classList.add('hidden')
+      function setAnswerVisible(show, answerValue) {
+        if (!show) {
           elAnswerLine.classList.add('hidden')
           elAnswerPill.textContent = ''
           return
         }
-        elJudgeMark.textContent = mark
-        elJudgeMark.classList.remove('hidden')
-
-        if (showAnswer) {
-          elAnswerPill.textContent = `こたえ: ${showAnswer}`
-          elAnswerLine.classList.remove('hidden')
-        } else {
-          elAnswerLine.classList.add('hidden')
-          elAnswerPill.textContent = ''
-        }
+        elAnswerPill.textContent = `こたえ: ${answerValue}`
+        elAnswerLine.classList.remove('hidden')
       }
 
       function lockInput(lock) {
@@ -859,7 +869,7 @@
         state.input = ''
         state.judged = false
         setTypedUI()
-        setJudgedUI('', '')
+        setAnswerVisible(false, '')
         lockInput(false)
         setNextEnabled(false)
 
@@ -945,8 +955,11 @@
         state.sessionItems.push({ key: state.current.key, correct })
         state.judged = true
 
-        if (correct) setJudgedUI('⭕', '')
-        else setJudgedUI('✖', state.current.answer)
+        if (correct) {
+          setAnswerVisible(false, '')
+        } else {
+          setAnswerVisible(true, state.current.answer)
+        }
 
         lockInput(true)
         setNextEnabled(true)
