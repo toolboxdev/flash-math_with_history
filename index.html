@@ -445,7 +445,6 @@
           <div class='label'>がくしゅう りれき</div>
           <div class='historyActions'>
             <button id='btnViewHistory' class='btn' type='button'>りれき みる</button>
-            <button id='btnResetHistory' class='btn subtle' type='button'>もんだい りれき りせっと</button>
           </div>
           <div class='hint'>この たんまつの りれきを かくにん できます</div>
         </div>
@@ -645,7 +644,6 @@
       const btnViewHistory = $('btnViewHistory')
       const btnBackFromHistory = $('btnBackFromHistory')
 
-      const btnResetHistory = $('btnResetHistory')
       const btnResetHistory2 = $('btnResetHistory2')
       const btnResetSessions = $('btnResetSessions')
 
@@ -1469,7 +1467,6 @@
           showSettings()
         })
 
-        btnResetHistory.addEventListener('click', () => openConfirm('history'))
         if (btnResetHistory2) btnResetHistory2.addEventListener('click', () => openConfirm('history'))
         if (btnResetSessions) btnResetSessions.addEventListener('click', () => openConfirm('sessions'))
 
