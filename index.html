@@ -114,24 +114,45 @@
       background:rgba(17,24,39,0.85);
       border:1px solid rgba(255,255,255,0.06);
       border-radius:var(--radius);
-      padding:18px 16px;
+      padding:16px 14px;
       margin:12px 0 12px;
       box-shadow: 0 10px 28px rgba(0,0,0,0.45);
       text-align:center;
       position:relative;
       overflow:hidden;
     }
-    .problem{font-size:64px; font-weight:800; letter-spacing:1px; margin:8px 0 6px;}
-    .answerBox{
-      margin-top:10px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,0.10);
-      background:rgba(255,255,255,0.04);
-      padding:14px 12px;
+
+    /* 横並びの式 */
+    .exprRow{
       display:flex;
       align-items:center;
       justify-content:center;
-      min-height:70px;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:6px 0 4px;
+    }
+    .problem{
+      font-size:56px;
+      font-weight:900;
+      letter-spacing:1px;
+      line-height:1;
+    }
+    .eq{
+      font-size:46px;
+      font-weight:900;
+      line-height:1;
+      opacity:0.95;
+    }
+    .answerBox{
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.04);
+      padding:10px 12px;
+      min-width:120px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:64px;
     }
     .answerText{
       font-size:44px;
@@ -141,7 +162,15 @@
     .answerPlaceholder{
       font-size:20px;
       color:rgba(229,231,235,0.55);
-      font-weight:700;
+      font-weight:800;
+      letter-spacing:1px;
+    }
+
+    @media (max-width:420px){
+      .problem{font-size:46px;}
+      .eq{font-size:40px;}
+      .answerText{font-size:38px;}
+      .answerBox{min-width:104px;}
     }
 
     /* feedback overlay */
@@ -156,28 +185,30 @@
     }
     .judgeOverlay.hidden{display:none;}
     .judgeMark{
-      font-size:120px;
+      font-size:124px;
       font-weight:900;
       color: rgba(220,38,38,0.95);
       text-shadow: 0 10px 30px rgba(0,0,0,0.55);
       line-height:1;
-      transform: translateY(-6px);
+      transform: translateY(-8px);
     }
     .judgeSub{
       position:absolute;
-      bottom:12px;
+      bottom:14px;
       left:12px;
       right:12px;
       text-align:center;
-      color:rgba(229,231,235,0.85);
-      font-size:14px;
     }
-    .judgeSub .pill{
+    .judgePill{
       display:inline-block;
-      padding:3px 10px;
+      padding:6px 12px;
       border-radius:999px;
-      background:rgba(17,24,39,0.85);
-      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(17,24,39,0.92);
+      border:1px solid rgba(255,255,255,0.12);
+      color:rgba(229,231,235,0.92);
+      font-weight:900;
+      font-size:22px;
+      letter-spacing:0.5px;
     }
 
     /* bottom fixed keypad */
@@ -195,16 +226,6 @@
       padding-top:10px;
     }
 
-    .dockTopRow{
-      display:flex;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .dockTopRow .btn{
-      flex:1;
-      min-width:0;
-    }
-
     .keypad{
       display:grid;
       grid-template-columns: repeat(3, 1fr);
@@ -217,20 +238,29 @@
       border-radius:16px;
       padding:14px 10px;
       font-size:24px;
-      font-weight:800;
+      font-weight:900;
       cursor:pointer;
       min-height:56px;
     }
     .key:active{transform: translateY(1px);}
-    .key.wide{grid-column: span 2;}
     .key.ok{
       background:rgba(37,99,235,0.9);
       border-color:rgba(255,255,255,0.14);
     }
     .key.util{
       background:rgba(255,255,255,0.03);
-      font-weight:800;
+      font-weight:900;
       font-size:18px;
+    }
+
+    .dockActions{
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+    }
+    .dockActions .btn{
+      flex:1;
+      min-width:0;
     }
 
     .result{margin:10px 0; font-size:20px; font-weight:800; text-align:center;}
@@ -351,17 +381,19 @@
         <div class='progressBar'><div id='progressFill' class='progressFill'></div></div>
 
         <div class='quizCard'>
-          <div id='problem' class='problem'>-</div>
-
-          <div class='answerBox'>
-            <div id='answerInput' class='answerText hidden'></div>
-            <div id='answerPlaceholder' class='answerPlaceholder'>こたえを いれてね</div>
+          <div class='exprRow'>
+            <div id='problem' class='problem'>-</div>
+            <div class='eq'>=</div>
+            <div class='answerBox'>
+              <div id='answerInput' class='answerText hidden'></div>
+              <div id='answerPlaceholder' class='answerPlaceholder'>□</div>
+            </div>
           </div>
 
           <div id='judgeOverlay' class='judgeOverlay hidden'>
             <div id='judgeMark' class='judgeMark'>⭕</div>
             <div class='judgeSub'>
-              <span id='judgeSubPill' class='pill'></span>
+              <span id='judgeSubPill' class='judgePill'></span>
             </div>
           </div>
         </div>
@@ -371,11 +403,6 @@
 
         <div class='bottomDock'>
           <div class='dockInner'>
-            <div class='dockTopRow'>
-              <button id='btnNext' class='btn primary' type='button' disabled>つぎ</button>
-              <button id='btnClear' class='btn' type='button'>けす</button>
-            </div>
-
             <div class='keypad' id='keypad'>
               <button class='key' data-key='1' type='button'>1</button>
               <button class='key' data-key='2' type='button'>2</button>
@@ -389,6 +416,11 @@
               <button class='key util' data-key='back' type='button'>けす</button>
               <button class='key' data-key='0' type='button'>0</button>
               <button class='key ok' data-key='ok' type='button'>OK</button>
+            </div>
+
+            <div class='dockActions'>
+              <button id='btnClear' class='btn' type='button'>ぜんぶ けす</button>
+              <button id='btnNext' class='btn primary' type='button' disabled>つぎ</button>
             </div>
           </div>
         </div>
@@ -539,11 +571,7 @@
       const LIMIT = 50
 
       const state = {
-        settings: {
-          opmode: 'add',
-          range: 'c2a',
-          sum10: false
-        },
+        settings: { opmode: 'add', range: 'c2a', sum10: false },
         history: {},
         sessions: [],
         current: null,
@@ -557,8 +585,7 @@
         pendingReset: null,
         input: '',
         locked: false,
-        lastJudge: null,
-        sessionItems: [] // { key, correct }
+        sessionItems: []
       }
 
       function loadSettings() {
@@ -589,9 +616,7 @@
         localStorage.setItem(LS_SESSIONS, JSON.stringify(state.sessions))
       }
 
-      function setStatus(msg) {
-        elStatus.textContent = msg || ''
-      }
+      function setStatus(msg) { elStatus.textContent = msg || '' }
       function setActiveSeg(selector, value, attr) {
         document.querySelectorAll(selector).forEach(btn => {
           btn.classList.toggle('active', btn.getAttribute(attr) === String(value))
@@ -794,36 +819,31 @@
         } else {
           elAnswerInput.classList.add('hidden')
           elAnswerPlaceholder.classList.remove('hidden')
-          elAnswerPlaceholder.textContent = 'こたえを いれてね'
+          elAnswerPlaceholder.textContent = '□'
         }
       }
 
       function lockInput(lock) {
         state.locked = !!lock
         const disabled = state.locked
-        if (keypad) {
-          keypad.querySelectorAll('button').forEach(b => b.disabled = disabled)
-        }
+        if (keypad) keypad.querySelectorAll('button').forEach(b => b.disabled = disabled)
         btnClear.disabled = disabled
       }
 
-      function showJudge(mark, correctAnswer, typed) {
+      function showJudge(mark, correctAnswer) {
         elJudgeMark.textContent = mark
         if (mark === '⭕') {
           elJudgeSubPill.textContent = 'できた'
         } else {
-          elJudgeSubPill.textContent = `こたえ: ${correctAnswer} / あなた: ${typed || '-'}`
+          elJudgeSubPill.textContent = `こたえ: ${correctAnswer}`
         }
         elJudgeOverlay.classList.remove('hidden')
       }
 
-      function hideJudge() {
-        elJudgeOverlay.classList.add('hidden')
-      }
+      function hideJudge() { elJudgeOverlay.classList.add('hidden') }
 
       function startQuestion() {
         state.phase = 'question'
-        state.lastJudge = null
         state.input = ''
         setInputUI()
         hideJudge()
@@ -897,13 +917,10 @@
         if (state.locked) return
 
         const typedRaw = String(state.input || '').trim()
-        if (!typedRaw.length) {
-          elAnswerPlaceholder.textContent = 'すうじを いれてね'
-          return
-        }
+        if (!typedRaw.length) return
+
         const typed = Number(typedRaw)
         if (!Number.isFinite(typed)) {
-          elAnswerPlaceholder.textContent = 'すうじだけ いれてね'
           state.input = ''
           setInputUI()
           return
@@ -919,7 +936,7 @@
 
         state.sessionItems.push({ key: state.current.key, correct })
 
-        showJudge(correct ? '⭕' : '✕', state.current.answer, typedRaw)
+        showJudge(correct ? '⭕' : '✕', state.current.answer)
 
         lockInput(true)
         btnNext.disabled = false
@@ -1105,7 +1122,6 @@
         const target = state.sessions[idx]
         const items = Array.isArray(target.items) ? target.items : []
 
-        // 問題履歴の差し戻し
         loadHistory()
         for (const it of items) {
           const key = it && it.key ? String(it.key) : ''
@@ -1116,18 +1132,14 @@
           const shown = Math.max((Number(h.shown) || 0) - 1, 0)
           const correct = Math.max((Number(h.correct) || 0) - (it.correct ? 1 : 0), 0)
 
-          if (shown <= 0) {
-            // 0になったら行ごと削除
-            delete state.history[key]
-          } else {
+          if (shown <= 0) delete state.history[key]
+          else {
             h.shown = shown
             h.correct = Math.min(correct, shown)
-            // weight と last_at は簡略に据え置き
           }
         }
         saveHistory()
 
-        // セット削除
         state.sessions.splice(idx, 1)
         saveSessions()
 
@@ -1179,7 +1191,6 @@
         btnToSettings.addEventListener('click', () => {
           if (state.phase === 'history') { showSettings(); return }
           if (!elSettings.classList.contains('hidden')) return
-          // 途中終了も可能にする
           stop()
           showSettings()
         })
@@ -1223,13 +1234,11 @@
           if (/^[0-9]$/.test(k)) { appendDigit(k); return }
         })
 
-        // 履歴テーブル内のセット削除
         elSessionTable.addEventListener('click', (e) => {
           const b = e.target.closest('button[data-del-session]')
           if (!b) return
           const id = b.getAttribute('data-del-session')
           if (!id) return
-          // ここは確認を挟みたければ openConfirm を拡張できる
           deleteSessionById(id)
         })
       }
