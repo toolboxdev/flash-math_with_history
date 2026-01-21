@@ -176,7 +176,7 @@
       .typedSlot{width: 5ch;}
     }
 
-    /* 判定マークはまっすぐ固定（斜め回転なし） */
+    /* 〇✖ 判定表示はまっすぐ固定（斜め回転なし） */
     .judgeMark{
       position:absolute;
       top:10px;
@@ -189,6 +189,9 @@
       pointer-events:none;
       transform:none; /* ここが重要 */
     }
+    .judgeMark.ok{ color: rgba(34,197,94,0.95); }
+    .judgeMark.ng{ color: rgba(220,38,38,0.95); }
+
     .judgeMark.hidden{display:none;}
 
     /* こたえ表示は入力より少し大きく */
@@ -207,7 +210,7 @@
       border:1px solid rgba(255,255,255,0.12);
       color:rgba(229,231,235,0.96);
       font-weight:900;
-      font-size:60px; /* typed(56)より少し大きく */
+      font-size:24px;
       letter-spacing:0.5px;
       box-shadow: 0 12px 30px rgba(0,0,0,0.35);
       line-height:1;
@@ -215,6 +218,27 @@
     @media (max-width:420px){
       .answerPill{font-size:52px;}
     }
+
+    .answerLabel{
+      font-size:16px; /* こたえ: は小さめ固定 */
+      font-weight:800;
+      color:rgba(229,231,235,0.85);
+    }
+    
+    .answerValue{
+      font-size:72px; /* 数字だけ大きく */
+      font-weight:900;
+      line-height:1;
+      letter-spacing:0.5px;
+      margin-left:10px;
+      display:inline-block;
+    }
+    
+    @media (max-width:420px){
+      .answerValue{font-size:60px;}
+    }
+
+  
     .answerLine.hidden{display:none;}
 
     .result{margin:10px 0; font-size:20px; font-weight:800; text-align:center;}
@@ -326,6 +350,52 @@
     .modalText{font-size:14px; color:var(--muted); margin-bottom:14px; line-height:1.6;}
     .modalActions{display:flex; gap:10px; flex-wrap:wrap;}
     .modalActions .btn{flex:1; min-width:160px;}
+
+    /* 50もん きろく: もんだい みる ボタン用 */
+    .btn.mini{
+      font-size:14px;
+      padding:8px 10px;
+      border-radius:12px;
+    }
+    
+    /* 操作セル内を横並びにする */
+    .sessionBtns{
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+    
+    /* セッション詳細モーダル */
+    .modalBox.large{
+      max-width:720px;
+    }
+    .sessionDetail{
+      max-height:60vh;
+      overflow:auto;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(17,24,39,0.60);
+    }
+    .sessionDetail table{
+      width:100%;
+      min-width:0;
+      border-collapse:collapse;
+    }
+    .sessionDetail th, .sessionDetail td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+    .sessionDetail th{
+      font-size:12px;
+      color:var(--muted);
+      position:sticky;
+      top:0;
+      background:rgba(17,24,39,0.92);
+    }
+    .sessionDetail .markOk{color:rgba(34,197,94,0.95); font-weight:900;}
+    .sessionDetail .markNg{color:rgba(220,38,38,0.95); font-weight:900;}
+
   </style>
 </head>
 <body>
@@ -391,6 +461,8 @@
         <div class='progressBar'><div id='progressFill' class='progressFill'></div></div>
 
         <div class='quizCard' id='quizCard'>
+          <div id="judge" class="judgeMark hidden" aria-live="polite"></div>
+          
           <div class='exprRow'>
             <div class='exprLeft'>
               <div id='problem' class='problem'>-</div>
@@ -401,9 +473,15 @@
             </div>
           </div>
 
+
+
           <div id='answerLine' class='answerLine hidden'>
-            <span id='answerPill' class='answerPill'></span>
+            <span class='answerPill'>
+              <span class='answerLabel'>こたえ:</span>
+              <span id='answerValue' class='answerValue'></span>
+            </span>
           </div>
+
         </div>
 
         <div id='result' class='result hidden'></div>
@@ -465,7 +543,7 @@
                     <th class='right'>せいかいりつ</th>
                     <th class='right'>じかん</th>
                     <th>せってい</th>
-                    <th class='right'>さくじょ</th>
+                    <th class='right'>そうさ</th>
                   </tr>
                 </thead>
                 <tbody id='sessionTable'></tbody>
@@ -522,6 +600,20 @@
     </div>
   </div>
 
+  <div id='sessionModal' class='modal hidden' role='dialog' aria-modal='true' aria-labelledby='sessionModalTitle'>
+    <div class='modalBox large'>
+      <div id='sessionModalTitle' class='modalTitle'>50もん の もんだい</div>
+      <div id='sessionModalMeta' class='modalText'></div>
+  
+      <div id='sessionModalBody' class='sessionDetail'></div>
+  
+      <div class='modalActions' style='margin-top:12px;'>
+        <button id='btnSessionClose' class='btn' type='button'>とじる</button>
+      </div>
+    </div>
+  </div>
+
+
   <script>
     ;(() => {
       const LS_SETTINGS = 'flash_math_settings_v1'
@@ -543,7 +635,8 @@
       const elProgressFill = $('progressFill')
 
       const elAnswerLine = $('answerLine')
-      const elAnswerPill = $('answerPill')
+      const elAnswerValue = $('answerValue')
+      const elJudge = $("judge")
 
       const btnToSettings = $('btnToSettings')
       const btnStart = $('btnStart')
@@ -571,6 +664,11 @@
       const elConfirmText = $('confirmText')
       const btnConfirmCancel = $('btnConfirmCancel')
       const btnConfirmOk = $('btnConfirmOk')
+
+      const elSessionModal = $('sessionModal')
+      const elSessionModalMeta = $('sessionModalMeta')
+      const elSessionModalBody = $('sessionModalBody')
+      const btnSessionClose = $('btnSessionClose')
 
       const bottomDock = $('bottomDock')
       const keypad = $('keypad')
@@ -707,22 +805,52 @@
       function getHist(key) {
         const h = state.history[key]
         if (h && typeof h === 'object') return h
-        const init = { shown: 0, correct: 0, weight: 1.0, last_at: 0 }
+        const init = { shown: 0, correct: 0, last_at: 0 }
         state.history[key] = init
         return init
       }
 
-      function updateWeight(key, isCorrect) {
-        const h = getHist(key)
-        h.shown += 1
-        if (isCorrect) {
-          h.correct += 1
-          h.weight = Math.max(0.3, +(h.weight * 0.8).toFixed(6))
-        } else {
-          h.weight = Math.min(3.0, +(h.weight * 1.25).toFixed(6))
-        }
-        h.last_at = Date.now()
+      function updateWeight(key, isCorrect){
+        const h = getHist(key);
+        h.shown += 1;
+        if(isCorrect) h.correct += 1;
+        h.last_at = Date.now();
       }
+
+      function calcWeightByAccuracy(key){
+        const h0 = state.history[key]
+        const shown = h0 ? (Number(h0.shown) || 0) : 0
+        const correct = h0 ? (Number(h0.correct) || 0) : 0
+        const last = h0 ? (Number(h0.last_at) || 0) : 0
+      
+        // 平滑化（少数試行の100%を過信しない）
+        const alpha = 1
+        const beta  = 1
+        const p = (correct + alpha) / (shown + alpha + beta)
+        const diff = 1 - p
+      
+        const wMin = 0.02
+        const wMax = 3.0
+        const gamma = 2.2
+      
+        let w = wMin + (wMax - wMin) * Math.pow(diff, gamma)
+      
+        // 未出題(=shown=0)は「慣らし」で少しだけ強めにする
+        if (shown === 0) w = Math.max(w, 0.6)
+      
+        // 放置された問題を少しだけ復習に回す
+        if (last > 0){
+          const days = (Date.now() - last) / 86400000
+          const rec = 1 + Math.min(1, days / 3)
+          w *= rec
+        }
+      
+        return w
+      }
+
+
+      
+
 
       function getRangeSpec() {
         const r = state.settings.range
@@ -807,8 +935,7 @@
         let total = 0
         const weights = new Array(pool.length)
         for (let i = 0; i < pool.length; i++) {
-          const h = state.history[pool[i].key]
-          const w = (h && typeof h.weight === 'number') ? h.weight : 1.0
+          const w = calcWeightByAccuracy(pool[i].key);
           weights[i] = w
           total += w
         }
@@ -846,12 +973,13 @@
       function setAnswerVisible(show, answerValue) {
         if (!show) {
           elAnswerLine.classList.add('hidden')
-          elAnswerPill.textContent = ''
+          elAnswerValue.textContent = ''
           return
         }
-        elAnswerPill.textContent = `こたえ: ${answerValue}`
+        elAnswerValue.textContent = String(answerValue)
         elAnswerLine.classList.remove('hidden')
       }
+
 
       function lockInput(lock) {
         state.locked = !!lock
@@ -865,6 +993,7 @@
       }
 
       function startQuestion() {
+        hideJudge()
         state.phase = 'question'
         state.input = ''
         state.judged = false
@@ -889,6 +1018,31 @@
         elResult.classList.add('hidden')
         btnBackToSettings.classList.add('hidden')
       }
+
+      let judgeTimer = null;
+
+      function showJudge(isCorrect){
+        if(!elJudge) return;
+      
+        elJudge.textContent = isCorrect ? '〇' : '✖';
+        elJudge.classList.remove('ok','ng','hidden');
+        elJudge.classList.add(isCorrect ? 'ok' : 'ng');
+      
+        if(judgeTimer) clearTimeout(judgeTimer);
+        judgeTimer = setTimeout(() => {
+          elJudge.classList.add('hidden');
+          judgeTimer = null;
+        }, 600);
+      }
+
+      
+      function hideJudge(){
+        if(!elJudge) return;
+        elJudge.classList.add("hidden");
+        if(judgeTimer) clearTimeout(judgeTimer);
+        judgeTimer = null;
+      }
+
 
       function formatDuration(ms) {
         const sec = Math.max(0, Math.floor(ms / 1000))
@@ -937,39 +1091,42 @@
         if (!state.current) return
         if (state.locked) return
         if (state.judged) return
-
+      
         const typedRaw = String(state.input || '').trim()
         if (!typedRaw.length) return
-
+      
         const typed = Number(typedRaw)
         if (!Number.isFinite(typed)) return
-
+      
         const correct = (typed === state.current.answer)
-
+      
         state.sessionTotal += 1
         if (correct) state.sessionCorrect += 1
-
+      
+        showJudge(correct)
+      
         updateWeight(state.current.key, correct)
         saveHistory()
-
+      
         state.sessionItems.push({ key: state.current.key, correct })
         state.judged = true
-
+      
         if (correct) {
           setAnswerVisible(false, '')
         } else {
           setAnswerVisible(true, state.current.answer)
         }
-
+      
         lockInput(true)
         setNextEnabled(true)
         updateProgressUI()
-
+      
         if (state.sessionTotal >= LIMIT) {
           stop()
           return
         }
       }
+
 
       function nextAfterJudge() {
         if (!state.judged) return
@@ -1022,7 +1179,7 @@
             key: k,
             shown: Number(v.shown) || 0,
             correct: Number(v.correct) || 0,
-            weight: (typeof v.weight === 'number') ? v.weight : Number(v.weight) || 0,
+            weight: calcWeightByAccuracy(k),
             last_at: Number(v.last_at) || 0
           }))
 
@@ -1065,31 +1222,91 @@
         }).join('')
       }
 
+      function openSessionModal(sessionId){
+        loadSessions()
+        const s = state.sessions.find(x => String(x.id) === String(sessionId))
+        if (!s) return
+      
+        const at = formatJst(s.at)
+        const total = Number(s.total) || 0
+        const correct = Number(s.correct) || 0
+        const rate = total > 0 ? Math.round((correct / total) * 100) : 0
+        const dur = (typeof s.duration_ms === 'number') ? formatDuration(s.duration_ms) : '-'
+      
+        elSessionModalMeta.textContent = `いつ: ${at || '-'} / できた: ${correct}/${total} / せいかいりつ: ${rate}% / じかん: ${dur}`
+      
+        const items = Array.isArray(s.items) ? s.items : []
+        if (!items.length) {
+          elSessionModalBody.innerHTML = `<div style='padding:12px;' class='muted'>もんだい データが ありません</div>`
+        } else {
+          const rows = items.map((it, idx) => {
+            const key = it && it.key ? String(it.key) : ''
+            const ok = !!(it && it.correct)
+            const { op, left, right } = parseKey(key)
+            const expr = `${left} ${opSymbol(op)} ${right}`
+            const markClass = ok ? 'markOk' : 'markNg'
+            const markText = ok ? '〇' : '✖'
+            return (
+              `<tr>` +
+                `<td class='right'>${idx + 1}</td>` +
+                `<td>${expr}</td>` +
+                `<td class='right'><span class='${markClass}'>${markText}</span></td>` +
+              `</tr>`
+            )
+          }).join('')
+      
+          elSessionModalBody.innerHTML =
+            `<table>` +
+              `<thead>` +
+                `<tr>` +
+                  `<th class='right'>ばんごう</th>` +
+                  `<th>もんだい</th>` +
+                  `<th class='right'>けっか</th>` +
+                `</tr>` +
+              `</thead>` +
+              `<tbody>` + rows + `</tbody>` +
+            `</table>`
+        }
+      
+        elSessionModal.classList.remove('hidden')
+      }
+      
+      function closeSessionModal(){
+        elSessionModal.classList.add('hidden')
+        elSessionModalMeta.textContent = ''
+        elSessionModalBody.innerHTML = ''
+      }
+
+
       function renderSessions() {
         loadSessions()
         if (!state.sessions.length) {
           elSessionTable.innerHTML = `<tr><td colspan='7' class='muted'>50もん きろくが ありません</td></tr>`
           return
         }
-
+      
         elSessionTable.innerHTML = state.sessions.map(s => {
           const at = formatJst(s.at)
           const total = Number(s.total) || 0
           const correct = Number(s.correct) || 0
           const rate = total > 0 ? Math.round((correct / total) * 100) : 0
           const dur = (typeof s.duration_ms === 'number') ? formatDuration(s.duration_ms) : '-'
-
+      
           const st = s.settings || {}
           const op = st.opmode === 'add' ? 'たし' : (st.opmode === 'sub' ? 'ひき' : 'まぜ')
           const range = st.range === 'c2a' ? '1-9' : (st.range === 'c2b' ? '1-19' : '10-99')
           const sum10 = st.sum10 ? '10まで' : ''
           const settingText = [op, range, sum10].filter(Boolean).join(' / ')
-
+      
           const id = s.id ? String(s.id) : ''
-          const delBtn = id
-            ? `<button class='btn subtle' data-del-session='${id}' type='button'>けす</button>`
+          const viewBtn = id
+            ? `<button class='btn subtle mini' data-view-session='${id}' type='button'>もんだい みる</button>`
             : `<span class='muted'>-</span>`
-
+      
+          const delBtn = id
+            ? `<button class='btn subtle mini' data-del-session='${id}' type='button'>けす</button>`
+            : `<span class='muted'>-</span>`
+      
           return (
             `<tr>` +
               `<td><span class='pill'>${at || '-'}</span></td>` +
@@ -1098,24 +1315,28 @@
               `<td class='right'>${rate}%</td>` +
               `<td class='right'>${dur}</td>` +
               `<td>${settingText}</td>` +
-              `<td class='right'>${delBtn}</td>` +
+              `<td class='right'><div class='sessionBtns'>${viewBtn}${delBtn}</div></td>` +
             `</tr>`
           )
         }).join('')
       }
 
-      function openConfirm(kind) {
-        state.pendingReset = kind
+      function openConfirm(kind, payload) {
+        state.pendingReset = { kind, payload }
+      
         if (kind === 'history') elConfirmText.textContent = 'もんだい りれきを ぜんぶ けします。いい？'
         else if (kind === 'sessions') elConfirmText.textContent = '50もん きろくを ぜんぶ けします。いい？'
+        else if (kind === 'deleteSession') elConfirmText.textContent = 'この 50もん きろくを さくじょ します。いい？'
         else elConfirmText.textContent = 'じっこう しますか？'
+      
         elConfirm.classList.remove('hidden')
       }
-
+      
       function closeConfirm() {
         elConfirm.classList.add('hidden')
         state.pendingReset = null
       }
+
 
       function resetHistory() {
         state.history = {}
@@ -1131,24 +1352,31 @@
         if (state.phase === 'history') renderSessions()
       }
 
-      function deleteSessionById(sessionId) {
+      function deleteSessionById(sessionId, opts) {
+        const skipConfirm = !!(opts && opts.skipConfirm)
+      
+        if (!skipConfirm) {
+          openConfirm('deleteSession', { sessionId })
+          return
+        }
+      
         loadSessions()
         const idx = state.sessions.findIndex(s => String(s.id) === String(sessionId))
         if (idx < 0) return
-
+      
         const target = state.sessions[idx]
         const items = Array.isArray(target.items) ? target.items : []
-
+      
         loadHistory()
         for (const it of items) {
           const key = it && it.key ? String(it.key) : ''
           if (!key) continue
           const h = state.history[key]
           if (!h || typeof h !== 'object') continue
-
+      
           const shown = Math.max((Number(h.shown) || 0) - 1, 0)
           const correct = Math.max((Number(h.correct) || 0) - (it.correct ? 1 : 0), 0)
-
+      
           if (shown <= 0) delete state.history[key]
           else {
             h.shown = shown
@@ -1156,14 +1384,15 @@
           }
         }
         saveHistory()
-
+      
         state.sessions.splice(idx, 1)
         saveSessions()
-
+      
         setStatus('1セット さくじょ しました')
         renderHistory()
         renderSessions()
       }
+
 
       function wireUI() {
         document.querySelectorAll('.segBtn[data-opmode]').forEach(btn => {
@@ -1230,12 +1459,20 @@
         })
 
         btnConfirmCancel.addEventListener('click', closeConfirm)
+        
         btnConfirmOk.addEventListener('click', () => {
-          const kind = state.pendingReset
+          const p = state.pendingReset
           closeConfirm()
-          if (kind === 'history') resetHistory()
-          else if (kind === 'sessions') resetSessions()
+          if (!p) return
+        
+          if (p.kind === 'history') resetHistory()
+          else if (p.kind === 'sessions') resetSessions()
+          else if (p.kind === 'deleteSession') {
+            const id = p.payload && p.payload.sessionId ? p.payload.sessionId : ''
+            if (id) deleteSessionById(id, { skipConfirm: true })
+          }
         })
+
         elConfirm.addEventListener('click', (e) => { if (e.target === elConfirm) closeConfirm() })
 
         btnClearAll.addEventListener('click', clearAll)
@@ -1252,12 +1489,28 @@
         })
 
         elSessionTable.addEventListener('click', (e) => {
+          const v = e.target.closest('button[data-view-session]')
+          if (v) {
+            const id = v.getAttribute('data-view-session')
+            if (id) openSessionModal(id)
+            return
+          }
+        
           const b = e.target.closest('button[data-del-session]')
           if (!b) return
           const id = b.getAttribute('data-del-session')
           if (!id) return
           deleteSessionById(id)
         })
+
+        if (btnSessionClose) btnSessionClose.addEventListener('click', closeSessionModal)
+        if (elSessionModal) {
+          elSessionModal.addEventListener('click', (e) => {
+            if (e.target === elSessionModal) closeSessionModal()
+          })
+        }
+
+
       }
 
       function init() {
