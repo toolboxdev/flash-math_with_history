@@ -122,14 +122,14 @@
       overflow:hidden;
     }
 
-    /* 横並びの式 */
+    /* 横並びの式（入力は右にそのまま表示、□なし） */
     .exprRow{
       display:flex;
-      align-items:center;
+      align-items:baseline;
       justify-content:center;
-      gap:12px;
+      gap:10px;
       flex-wrap:wrap;
-      padding:6px 0 4px;
+      padding:10px 0 6px;
     }
     .problem{
       font-size:56px;
@@ -143,87 +143,81 @@
       line-height:1;
       opacity:0.95;
     }
-    .answerBox{
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,0.12);
-      background:rgba(255,255,255,0.04);
-      padding:10px 12px;
-      min-width:120px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      min-height:64px;
-    }
-    .answerText{
-      font-size:44px;
+    .typed{
+      font-size:56px;
       font-weight:900;
       letter-spacing:2px;
+      line-height:1;
+      min-width:1ch;
     }
-    .answerPlaceholder{
-      font-size:20px;
-      color:rgba(229,231,235,0.55);
-      font-weight:800;
-      letter-spacing:1px;
+    .typed.muted{
+      color:rgba(229,231,235,0.40);
     }
 
     @media (max-width:420px){
       .problem{font-size:46px;}
       .eq{font-size:40px;}
-      .answerText{font-size:38px;}
-      .answerBox{min-width:104px;}
+      .typed{font-size:46px;}
     }
 
-    /* feedback overlay */
-    .judgeOverlay{
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(0,0,0,0.42);
-      backdrop-filter: blur(2px);
-    }
-    .judgeOverlay.hidden{display:none;}
+    /* 判定マークは右上固定でかぶり回避 */
     .judgeMark{
-      font-size:124px;
+      position:absolute;
+      top:10px;
+      right:12px;
+      font-size:90px;
       font-weight:900;
       color: rgba(220,38,38,0.95);
       text-shadow: 0 10px 30px rgba(0,0,0,0.55);
       line-height:1;
-      transform: translateY(-8px);
+      pointer-events:none;
+      transform: rotate(-8deg);
     }
-    .judgeSub{
-      position:absolute;
-      bottom:14px;
-      left:12px;
-      right:12px;
-      text-align:center;
+    .judgeMark.hidden{display:none;}
+
+    /* まちがい時の答え表示は式の下（大きめ） */
+    .answerLine{
+      margin-top:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
     }
-    .judgePill{
+    .answerPill{
       display:inline-block;
-      padding:6px 12px;
+      padding:10px 16px;
       border-radius:999px;
       background:rgba(17,24,39,0.92);
       border:1px solid rgba(255,255,255,0.12);
-      color:rgba(229,231,235,0.92);
+      color:rgba(229,231,235,0.96);
       font-weight:900;
-      font-size:22px;
+      font-size:28px;
       letter-spacing:0.5px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    }
+    .answerLine.hidden{display:none;}
+
+    /* ぜんぶけすは式の下 */
+    .underExprActions{
+      margin-top:12px;
+      display:flex;
+      justify-content:center;
     }
 
     /* bottom fixed keypad */
     .bottomDock{
-      margin-top:auto;
-      position:sticky;
+      position:fixed;
+      left:0;
+      right:0;
       bottom:0;
-      padding-bottom: calc(10px + env(safe-area-inset-bottom));
-      background: linear-gradient(180deg, rgba(11,16,32,0), rgba(11,16,32,0.75) 30%, rgba(11,16,32,0.95));
-      backdrop-filter: blur(6px);
+      padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, rgba(11,16,32,0), rgba(11,16,32,0.75) 25%, rgba(11,16,32,0.97));
+      backdrop-filter: blur(8px);
+      z-index:999;
     }
     .dockInner{
       max-width:720px;
       margin:0 auto;
-      padding-top:10px;
     }
 
     .keypad{
@@ -247,20 +241,16 @@
       background:rgba(37,99,235,0.9);
       border-color:rgba(255,255,255,0.14);
     }
-    .key.util{
+    .key.next{
       background:rgba(255,255,255,0.03);
-      font-weight:900;
-      font-size:18px;
+      border:1px solid rgba(255,255,255,0.10);
+      color:rgba(229,231,235,0.92);
+      font-size:20px;
     }
-
-    .dockActions{
-      display:flex;
-      gap:10px;
-      margin-top:10px;
-    }
-    .dockActions .btn{
-      flex:1;
-      min-width:0;
+    .key:disabled{
+      opacity:0.45;
+      cursor:not-allowed;
+      transform:none;
     }
 
     .result{margin:10px 0; font-size:20px; font-weight:800; text-align:center;}
@@ -380,50 +370,26 @@
         </div>
         <div class='progressBar'><div id='progressFill' class='progressFill'></div></div>
 
-        <div class='quizCard'>
+        <div class='quizCard' id='quizCard'>
           <div class='exprRow'>
             <div id='problem' class='problem'>-</div>
             <div class='eq'>=</div>
-            <div class='answerBox'>
-              <div id='answerInput' class='answerText hidden'></div>
-              <div id='answerPlaceholder' class='answerPlaceholder'>□</div>
-            </div>
+            <div id='typed' class='typed muted'> </div>
           </div>
 
-          <div id='judgeOverlay' class='judgeOverlay hidden'>
-            <div id='judgeMark' class='judgeMark'>⭕</div>
-            <div class='judgeSub'>
-              <span id='judgeSubPill' class='judgePill'></span>
-            </div>
+          <div id='answerLine' class='answerLine hidden'>
+            <span id='answerPill' class='answerPill'></span>
           </div>
+
+          <div class='underExprActions'>
+            <button id='btnClearAll' class='btn' type='button'>ぜんぶ けす</button>
+          </div>
+
+          <div id='judgeMark' class='judgeMark hidden'>⭕</div>
         </div>
 
         <div id='result' class='result hidden'></div>
         <button id='btnBackToSettings' class='btn ghost hidden' type='button'>せっていに もどる</button>
-
-        <div class='bottomDock'>
-          <div class='dockInner'>
-            <div class='keypad' id='keypad'>
-              <button class='key' data-key='1' type='button'>1</button>
-              <button class='key' data-key='2' type='button'>2</button>
-              <button class='key' data-key='3' type='button'>3</button>
-              <button class='key' data-key='4' type='button'>4</button>
-              <button class='key' data-key='5' type='button'>5</button>
-              <button class='key' data-key='6' type='button'>6</button>
-              <button class='key' data-key='7' type='button'>7</button>
-              <button class='key' data-key='8' type='button'>8</button>
-              <button class='key' data-key='9' type='button'>9</button>
-              <button class='key util' data-key='back' type='button'>けす</button>
-              <button class='key' data-key='0' type='button'>0</button>
-              <button class='key ok' data-key='ok' type='button'>OK</button>
-            </div>
-
-            <div class='dockActions'>
-              <button id='btnClear' class='btn' type='button'>ぜんぶ けす</button>
-              <button id='btnNext' class='btn primary' type='button' disabled>つぎ</button>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section id='screenHistory' class='screen hidden' hidden>
@@ -501,6 +467,28 @@
     </footer>
   </div>
 
+  <div class='bottomDock hidden' id='bottomDock'>
+    <div class='dockInner'>
+      <div class='keypad' id='keypad'>
+        <button class='key' data-key='7' type='button'>7</button>
+        <button class='key' data-key='8' type='button'>8</button>
+        <button class='key' data-key='9' type='button'>9</button>
+
+        <button class='key' data-key='4' type='button'>4</button>
+        <button class='key' data-key='5' type='button'>5</button>
+        <button class='key' data-key='6' type='button'>6</button>
+
+        <button class='key' data-key='1' type='button'>1</button>
+        <button class='key' data-key='2' type='button'>2</button>
+        <button class='key' data-key='3' type='button'>3</button>
+
+        <button class='key next' data-key='next' type='button' disabled>つぎ</button>
+        <button class='key' data-key='0' type='button'>0</button>
+        <button class='key ok' data-key='ok' type='button'>OK</button>
+      </div>
+    </div>
+  </div>
+
   <div id='confirm' class='modal hidden' role='dialog' aria-modal='true' aria-labelledby='confirmTitle'>
     <div class='modalBox'>
       <div id='confirmTitle' class='modalTitle'>りせっと する？</div>
@@ -525,24 +513,20 @@
       const elHistory = $('screenHistory')
 
       const elProblem = $('problem')
+      const elTyped = $('typed')
       const elStatus = $('status')
 
       const elProgressText = $('progressText')
       const elProgressText2 = $('progressText2')
       const elProgressFill = $('progressFill')
 
-      const elAnswerInput = $('answerInput')
-      const elAnswerPlaceholder = $('answerPlaceholder')
-
-      const elJudgeOverlay = $('judgeOverlay')
       const elJudgeMark = $('judgeMark')
-      const elJudgeSubPill = $('judgeSubPill')
+      const elAnswerLine = $('answerLine')
+      const elAnswerPill = $('answerPill')
 
       const btnToSettings = $('btnToSettings')
       const btnStart = $('btnStart')
-      const btnNext = $('btnNext')
-      const btnClear = $('btnClear')
-      const keypad = $('keypad')
+      const btnBackToSettings = $('btnBackToSettings')
 
       const btnViewHistory = $('btnViewHistory')
       const btnBackFromHistory = $('btnBackFromHistory')
@@ -555,7 +539,6 @@
       const chkSum10 = $('sum10')
 
       const elResult = $('result')
-      const btnBackToSettings = $('btnBackToSettings')
 
       const elHistoryTable = $('historyTable')
       const elSessionTable = $('sessionTable')
@@ -567,6 +550,10 @@
       const elConfirmText = $('confirmText')
       const btnConfirmCancel = $('btnConfirmCancel')
       const btnConfirmOk = $('btnConfirmOk')
+
+      const bottomDock = $('bottomDock')
+      const keypad = $('keypad')
+      const btnClearAll = $('btnClearAll')
 
       const LIMIT = 50
 
@@ -585,6 +572,7 @@
         pendingReset: null,
         input: '',
         locked: false,
+        judged: false,
         sessionItems: []
       }
 
@@ -631,6 +619,7 @@
         elQuiz.setAttribute('hidden','')
         elSettings.classList.remove('hidden')
         btnToSettings.textContent = 'せってい'
+        bottomDock.classList.add('hidden')
         setStatus('')
       }
 
@@ -642,7 +631,9 @@
         elQuiz.classList.remove('hidden')
         elQuiz.removeAttribute('hidden')
         btnToSettings.textContent = 'せってい'
+        bottomDock.classList.remove('hidden')
         setStatus('')
+        syncBottomPadding()
       }
 
       function showHistory() {
@@ -653,11 +644,23 @@
         elHistory.classList.remove('hidden')
         elHistory.removeAttribute('hidden')
         btnToSettings.textContent = 'せってい'
+        bottomDock.classList.add('hidden')
         setStatus('')
         renderHistory()
         renderSessions()
         setHistoryTab(state.historyTab || 'problems')
       }
+
+      function syncBottomPadding() {
+        try {
+          const h = bottomDock.classList.contains('hidden') ? 0 : bottomDock.getBoundingClientRect().height
+          elQuiz.style.paddingBottom = h ? `${h + 14}px` : ''
+        } catch {}
+      }
+
+      window.addEventListener('resize', () => {
+        if (!bottomDock.classList.contains('hidden')) syncBottomPadding()
+      })
 
       function setHistoryTab(tab) {
         const t = (tab === 'sessions') ? 'sessions' : 'problems'
@@ -810,46 +813,55 @@
         elProgressFill.style.width = `${pct}%`
       }
 
-      function setInputUI() {
-        const s = state.input
-        if (s && s.length) {
-          elAnswerPlaceholder.classList.add('hidden')
-          elAnswerInput.classList.remove('hidden')
-          elAnswerInput.textContent = s
+      function setTypedUI() {
+        const s = String(state.input || '')
+        if (s.length) {
+          elTyped.textContent = s
+          elTyped.classList.remove('muted')
         } else {
-          elAnswerInput.classList.add('hidden')
-          elAnswerPlaceholder.classList.remove('hidden')
-          elAnswerPlaceholder.textContent = '□'
+          elTyped.textContent = ' '
+          elTyped.classList.add('muted')
+        }
+      }
+
+      function setJudgedUI(mark, showAnswer) {
+        if (!mark) {
+          elJudgeMark.classList.add('hidden')
+          elAnswerLine.classList.add('hidden')
+          elAnswerPill.textContent = ''
+          return
+        }
+        elJudgeMark.textContent = mark
+        elJudgeMark.classList.remove('hidden')
+
+        if (showAnswer) {
+          elAnswerPill.textContent = `こたえ: ${showAnswer}`
+          elAnswerLine.classList.remove('hidden')
+        } else {
+          elAnswerLine.classList.add('hidden')
+          elAnswerPill.textContent = ''
         }
       }
 
       function lockInput(lock) {
         state.locked = !!lock
-        const disabled = state.locked
-        if (keypad) keypad.querySelectorAll('button').forEach(b => b.disabled = disabled)
-        btnClear.disabled = disabled
+        keypad.querySelectorAll('button').forEach(b => b.disabled = state.locked || b.getAttribute('data-key') === 'next')
+        btnClearAll.disabled = state.locked
       }
 
-      function showJudge(mark, correctAnswer) {
-        elJudgeMark.textContent = mark
-        if (mark === '⭕') {
-          elJudgeSubPill.textContent = 'できた'
-        } else {
-          elJudgeSubPill.textContent = `こたえ: ${correctAnswer}`
-        }
-        elJudgeOverlay.classList.remove('hidden')
+      function setNextEnabled(enabled) {
+        const b = keypad.querySelector("button[data-key='next']")
+        if (b) b.disabled = !enabled
       }
-
-      function hideJudge() { elJudgeOverlay.classList.add('hidden') }
 
       function startQuestion() {
         state.phase = 'question'
         state.input = ''
-        setInputUI()
-        hideJudge()
-
+        state.judged = false
+        setTypedUI()
+        setJudgedUI('', '')
         lockInput(false)
-        btnNext.disabled = true
+        setNextEnabled(false)
 
         updateProgressUI()
 
@@ -864,7 +876,6 @@
         state.prevKey = p.key
 
         elProblem.textContent = formatProblem(p)
-
         elResult.classList.add('hidden')
         btnBackToSettings.classList.add('hidden')
       }
@@ -881,7 +892,7 @@
         state.phase = 'stopped'
         state.current = null
         lockInput(true)
-        btnNext.disabled = true
+        setNextEnabled(false)
 
         const durationMs = state.sessionStartAt ? (Date.now() - state.sessionStartAt) : 0
 
@@ -915,16 +926,13 @@
       function submitAnswer() {
         if (!state.current) return
         if (state.locked) return
+        if (state.judged) return
 
         const typedRaw = String(state.input || '').trim()
         if (!typedRaw.length) return
 
         const typed = Number(typedRaw)
-        if (!Number.isFinite(typed)) {
-          state.input = ''
-          setInputUI()
-          return
-        }
+        if (!Number.isFinite(typed)) return
 
         const correct = (typed === state.current.answer)
 
@@ -935,12 +943,13 @@
         saveHistory()
 
         state.sessionItems.push({ key: state.current.key, correct })
+        state.judged = true
 
-        showJudge(correct ? '⭕' : '✕', state.current.answer)
+        if (correct) setJudgedUI('⭕', '')
+        else setJudgedUI('✖', state.current.answer)
 
         lockInput(true)
-        btnNext.disabled = false
-
+        setNextEnabled(true)
         updateProgressUI()
 
         if (state.sessionTotal >= LIMIT) {
@@ -950,30 +959,25 @@
       }
 
       function nextAfterJudge() {
+        if (!state.judged) return
         if (state.phase === 'stopped') return
-        if (btnNext.disabled) return
         startQuestion()
       }
 
       function appendDigit(d) {
         if (state.locked) return
+        if (state.judged) return
         const s = String(state.input || '')
         if (s.length >= 4) return
         state.input = s + d
-        setInputUI()
+        setTypedUI()
       }
 
-      function backspace() {
+      function clearAll() {
         if (state.locked) return
-        const s = String(state.input || '')
-        state.input = s.slice(0, -1)
-        setInputUI()
-      }
-
-      function clearInput() {
-        if (state.locked) return
+        if (state.judged) return
         state.input = ''
-        setInputUI()
+        setTypedUI()
       }
 
       function formatJst(ts) {
@@ -1221,16 +1225,16 @@
         })
         elConfirm.addEventListener('click', (e) => { if (e.target === elConfirm) closeConfirm() })
 
-        btnNext.addEventListener('click', nextAfterJudge)
-        btnClear.addEventListener('click', clearInput)
+        btnClearAll.addEventListener('click', clearAll)
 
         keypad.addEventListener('click', (e) => {
           const btn = e.target.closest('button')
           if (!btn) return
           const k = btn.getAttribute('data-key')
           if (!k) return
+
           if (k === 'ok') { submitAnswer(); return }
-          if (k === 'back') { backspace(); return }
+          if (k === 'next') { nextAfterJudge(); return }
           if (/^[0-9]$/.test(k)) { appendDigit(k); return }
         })
 
