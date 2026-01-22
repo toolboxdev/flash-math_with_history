@@ -1106,7 +1106,14 @@
         updateWeight(state.current.key, correct)
         saveHistory()
       
-        state.sessionItems.push({ key: state.current.key, correct })
+        state.sessionItems.push({
+          key: state.current.key,
+          expr: formatProblem(state.current),        // 例 9 + 5
+          correct: correct,
+          typedRaw: typedRaw,                        // 例 14
+          typed: typed,                              // 例 14 (Number)
+          answer: state.current.answer               // 例 14
+        })
         state.judged = true
       
         if (correct) {
@@ -1250,24 +1257,37 @@
         const rows = items.map((it, idx) => {
           const key = it && it.key ? String(it.key) : ''
           const ok = !!(it && it.correct)
-          const { op, left, right } = parseKey(key)
-          const expr = `${left} ${opSymbol(op)} ${right}`
+        
+          // 互換: 古い記録には expr/typed/answer が無いので key から生成する
+          const expr = (it && it.expr) ? String(it.expr) : (() => {
+            const { op, left, right } = parseKey(key)
+            return `${left} ${opSymbol(op)} ${right}`
+          })()
+        
+          const typedRaw = (it && it.typedRaw != null) ? String(it.typedRaw) : '-'
+          const typedVal = (it && typeof it.typed === 'number' && Number.isFinite(it.typed)) ? String(it.typed) : '-'
+          const ansVal   = (it && it.answer != null) ? String(it.answer) : '-'
+        
           const markClass = ok ? 'markOk' : 'markNg'
           const markText = ok ? '〇' : '✖'
-      
+        
           const st = key ? statsForKey(key) : { shown: 0, cor: 0, rate: '-' }
-      
+        
           return (
             `<tr>` +
               `<td class='right'>${idx + 1}</td>` +
               `<td>${expr}</td>` +
               `<td class='right'><span class='${markClass}'>${markText}</span></td>` +
+              `<td class='right'>${typedRaw}</td>` +
+              `<td class='right'>${typedVal}</td>` +
+              `<td class='right'>${ansVal}</td>` +
               `<td class='right'>${st.shown}</td>` +
               `<td class='right'>${st.cor}</td>` +
               `<td class='right'>${st.rate}</td>` +
             `</tr>`
           )
         }).join('')
+
       
         elSessionModalBody.innerHTML =
           `<table>` +
@@ -1276,6 +1296,9 @@
                 `<th class='right'>ばんごう</th>` +
                 `<th>もんだい</th>` +
                 `<th class='right'>けっか</th>` +
+                `<th class='right'>input(生)</th>` +
+                `<th class='right'>typed(変換後)</th>` +
+                `<th class='right'>こたえ</th>` +
                 `<th class='right'>でた</th>` +
                 `<th class='right'>できた</th>` +
                 `<th class='right'>せいかいりつ</th>` +
