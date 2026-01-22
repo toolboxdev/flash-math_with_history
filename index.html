@@ -526,8 +526,8 @@
                 <thead>
                   <tr>
                     <th>もんだい</th>
-                    <th class='right'>でた</th>
-                    <th class='right'>できた</th>
+                    <th class='right'>でたかず</th>
+                    <th class='right'>できたかず</th>
                     <th class='right'>せいかいりつ</th>
                     <th>さいご</th>
                     <th class='right'>おもみ</th>
@@ -936,8 +936,48 @@
         return listCandidatesForOp('add').concat(listCandidatesForOp('sub'))
       }
 
+      function normalizePairForAdd(p){
+        const a = Number(p.left), b = Number(p.right)
+        return (a <= b) ? { x:a, y:b } : { x:b, y:a }
+      }
+      
+      function isTooSimilarToPrev(prev, c, deltaMax){
+        if (!prev || !c) return false
+        if (prev.op !== c.op) return false
+      
+        const dMax = Number.isFinite(deltaMax) ? deltaMax : 1
+      
+        // add は 6+1 と 1+6 を同型として扱う
+        if (c.op === 'add'){
+          const p0 = normalizePairForAdd(prev)
+          const c0 = normalizePairForAdd(c)
+      
+          // 片方一致 + もう片方が近い（例: 6+1→6+2）
+          if (p0.x === c0.x && Math.abs(p0.y - c0.y) <= dMax) return true
+          if (p0.y === c0.y && Math.abs(p0.x - c0.x) <= dMax) return true
+          return false
+        }
+      
+        // sub は生成時点で left>=right に正規化されている前提
+        if (c.op === 'sub'){
+          if (Number(prev.left) === Number(c.left) && Math.abs(Number(prev.right) - Number(c.right)) <= dMax) return true
+          if (Number(prev.right) === Number(c.right) && Math.abs(Number(prev.left) - Number(c.left)) <= dMax) return true
+          return false
+        }
+      
+        return false
+      }
+
       function weightedPick(candidates) {
-        const filtered = candidates.filter(c => c.key !== state.prevKey)
+        const prev = state.current || null
+        const deltaMax = 1
+      
+        const filtered = candidates.filter(c => {
+          if (c.key === state.prevKey) return false
+          if (prev && isTooSimilarToPrev(prev, c, deltaMax)) return false
+          return true
+        })
+      
         const pool = filtered.length ? filtered : candidates
 
         let total = 0
