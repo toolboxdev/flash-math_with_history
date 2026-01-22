@@ -122,14 +122,16 @@
     }
 
     /* 式が入力で揺れないように固定レイアウトにする */
-    .exprRow{
-      display:grid;
-      grid-template-columns: 1fr auto;
-      align-items:baseline;
-      gap:12px;
-      padding:10px 0 6px;
-      width:100%;
-    }
+      .exprRow{
+        display:grid;
+      
+        grid-template-columns: auto auto; /* 変更: 1fr をやめて右に飛ばないように */
+        justify-content:center;           /* 追加: 全体を中央寄せ */
+        align-items:baseline;
+        gap:8px;                          /* 変更: = と入力の間隔を詰める */
+        padding:10px 0 6px;
+        width:100%;
+      }
     .exprLeft{
       display:flex;
       align-items:baseline;
@@ -154,9 +156,9 @@
 
     /* 入力表示エリアを固定幅にして、式側が動かないようにする */
     .typedSlot{
-      width: 6ch;
+      width: 4ch;                 /* 変更: 6ch→4ch で右寄りを解消 */
       display:flex;
-      justify-content:flex-end;
+      justify-content:flex-start; /* 変更: 右寄せをやめる（=に寄せる） */
       align-items:baseline;
     }
     .typed{
@@ -165,7 +167,7 @@
       letter-spacing:2px;
       line-height:1;
       min-width:1ch;
-      text-align:right;
+      text-align:left;            /* 変更: 左寄せ */
     }
     .typed.muted{ color:rgba(229,231,235,0.40); }
 
@@ -173,7 +175,9 @@
       .problem{font-size:46px;}
       .eq{font-size:40px;}
       .typed{font-size:46px;}
-      .typedSlot{width: 5ch;}
+      .typedSlot{width: 3ch;}
+      .keypad{max-width:340px; gap:10px;}
+      .key{min-height:68px; font-size:24px;}
     }
 
     /* 〇✖ 判定表示はまっすぐ固定（斜め回転なし） */
@@ -271,19 +275,25 @@
     .keypad{
       display:grid;
       grid-template-columns: repeat(3, 1fr);
-      gap:10px;
+      gap:12px;
+    
+      max-width:380px;   /* 追加: 横に広がりすぎないよう制限 */
+      margin:0 auto;     /* 追加: 中央寄せ */
     }
     .key{
       background:rgba(17,24,39,0.88);
       border:1px solid rgba(255,255,255,0.10);
       color:var(--text);
-      border-radius:16px;
-      padding:14px 10px;
-      font-size:24px;
+      border-radius:14px;   /* 変更: 少し四角寄り */
+      padding:16px 10px;    /* 変更: 高さ方向を増やす */
+      font-size:26px;       /* 変更: 少し大きく */
       font-weight:900;
       cursor:pointer;
-      min-height:56px;
+    
+      min-height:72px;      /* 変更: 押しやすい高さに */
+      aspect-ratio:1 / 1;   /* 追加: 正方形寄り（横長を抑制） */
     }
+
     .key:active{transform: translateY(1px);}
     .key.ok{
       background:rgba(37,99,235,0.9);
