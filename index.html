@@ -176,8 +176,8 @@
       .eq{font-size:40px;}
       .typed{font-size:46px;}
       .typedSlot{width: 3ch;}
-      .keypad{max-width:340px; gap:10px;}
-      .key{min-height:68px; font-size:24px;}
+      .keypad{max-width:360px; gap:12px;}
+      .key{min-height:74px; font-size:26px; padding:16px 10px;}
     }
 
     /* 〇✖ 判定表示はまっすぐ固定（斜め回転なし） */
@@ -275,22 +275,22 @@
     .keypad{
       display:grid;
       grid-template-columns: repeat(3, 1fr);
-      gap:12px;
+      gap:14px;
     
-      max-width:380px;   /* 追加: 横に広がりすぎないよう制限 */
+      max-width:420px;   /* 追加: 横に広がりすぎないよう制限 */
       margin:0 auto;     /* 追加: 中央寄せ */
     }
     .key{
       background:rgba(17,24,39,0.88);
       border:1px solid rgba(255,255,255,0.10);
       color:var(--text);
-      border-radius:14px;   /* 変更: 少し四角寄り */
-      padding:16px 10px;    /* 変更: 高さ方向を増やす */
-      font-size:26px;       /* 変更: 少し大きく */
+      border-radius:16px;   /* 変更: 少し四角寄り */
+      padding:18px 12px;    /* 変更: 高さ方向を増やす */
+      font-size:28px;       /* 変更: 少し大きく */
       font-weight:900;
       cursor:pointer;
     
-      min-height:72px;      /* 変更: 押しやすい高さに */
+      min-height:80px;      /* 変更: 押しやすい高さに */
       aspect-ratio:1 / 1;   /* 追加: 正方形寄り（横長を抑制） */
     }
 
@@ -1309,8 +1309,8 @@
                 `<th class='right'>input(生)</th>` +
                 `<th class='right'>typed(変換後)</th>` +
                 `<th class='right'>こたえ</th>` +
-                `<th class='right'>でた</th>` +
-                `<th class='right'>できた</th>` +
+                `<th class='right'>でたかず</th>` +
+                `<th class='right'>できたかず</th>` +
                 `<th class='right'>せいかいりつ</th>` +
               `</tr>` +
             `</thead>` +
